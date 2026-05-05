@@ -1,0 +1,1735 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="João Paulo da Silva — Estrategista de IA para Negócios. Infraestrutura para captar e atender clientes com menos presença manual. Conversa Estratégica Gratuita." />
+  <meta property="og:title" content="João Paulo da Silva | Estrategista de IA para Negócios" />
+  <meta property="og:description" content="Sistema de Presença Autônoma: conteúdo com IA, atendimento ativo e captação direta. Instalação em 72h." />
+  <meta property="og:type" content="website" />
+  <title>João Paulo da Silva | Estrategista de IA para Negócios</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,300;0,400;0,600;0,700;0,800;1,300&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-main: #0D0D0D;
+      --bg-secondary: #141414;
+      --bg-tertiary: #1A1A1A;
+      --text: #FFFFFF;
+      --text-muted: #888888;
+      --accent: #C26B3A;
+      --border: #2A2A2A;
+      --accent-soft: rgba(194, 107, 58, 0.12);
+      --accent-border: rgba(194, 107, 58, 0.25);
+      --grid-lines: linear-gradient(rgba(194, 107, 58, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(194, 107, 58, 0.03) 1px, transparent 1px);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: "Raleway", sans-serif;
+      font-weight: 400;
+      line-height: 1.7;
+      color: var(--text);
+      background: var(--bg-main);
+      overflow-x: hidden;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    button {
+      font-family: inherit;
+    }
+
+    /* Section shell: grid + corners + glows */
+    .section-shell {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .section-shell::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image: var(--grid-lines);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .section-glow {
+      position: absolute;
+      width: 380px;
+      height: 380px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(194, 107, 58, 0.07) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .section-glow--tl {
+      top: -180px;
+      left: -120px;
+    }
+
+    .section-glow--br {
+      bottom: -200px;
+      right: -140px;
+    }
+
+    .corner-deco {
+      position: absolute;
+      width: 90px;
+      height: 90px;
+      border: 2px solid var(--accent);
+      opacity: 0.35;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .corner-deco--tl {
+      top: 24px;
+      left: 24px;
+      border-right: none;
+      border-bottom: none;
+    }
+
+    .corner-deco--br {
+      bottom: 24px;
+      right: 24px;
+      border-left: none;
+      border-top: none;
+    }
+
+    .container {
+      position: relative;
+      z-index: 2;
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    .section-padding {
+      padding: 96px 0;
+    }
+
+    @media (min-width: 768px) {
+      .section-padding {
+        padding: 120px 0;
+      }
+    }
+
+    /* Section header */
+    .section-tag {
+      display: block;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 3.5px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 0;
+    }
+
+    .section-divider {
+      width: 32px;
+      height: 2px;
+      background: var(--accent);
+      margin-top: 14px;
+      margin-bottom: 18px;
+    }
+
+    .title-display {
+      font-weight: 800;
+      letter-spacing: -1px;
+      line-height: 1;
+    }
+
+    .title-section {
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      line-height: 1.05;
+      font-size: 28px;
+      color: var(--text);
+    }
+
+    @media (min-width: 768px) {
+      .title-section {
+        font-size: 36px;
+      }
+    }
+
+    .italic-accent {
+      font-weight: 300;
+      font-style: italic;
+      color: var(--accent);
+    }
+
+    /* Nav */
+    .nav {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 50;
+      padding: 24px 0;
+    }
+
+    .nav-inner {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .nav-brand-name {
+      font-weight: 700;
+      color: var(--text);
+      font-size: 15px;
+    }
+
+    .nav-brand-label {
+      display: block;
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--accent);
+      margin-top: 4px;
+      text-transform: uppercase;
+    }
+
+    .nav-link {
+      font-size: 12px;
+      color: var(--text-muted);
+      transition: color 0.2s;
+    }
+
+    .nav-link:hover {
+      color: var(--text);
+    }
+
+    /* Hero */
+    .hero {
+      min-height: 100vh;
+      background: var(--bg-main);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      padding-top: 100px;
+      padding-bottom: 64px;
+    }
+
+    .hero-stripe {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 4px;
+      height: 100%;
+      background: linear-gradient(180deg, var(--accent) 0%, rgba(194, 107, 58, 0.35) 50%, var(--accent) 100%);
+      z-index: 3;
+      pointer-events: none;
+    }
+
+    .hero-grid {
+      display: grid;
+      gap: 48px;
+      align-items: center;
+    }
+
+    @media (min-width: 768px) {
+      .hero-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 40px;
+      }
+    }
+
+    .hero-headline {
+      font-weight: 800;
+      letter-spacing: -1px;
+      line-height: 1;
+      font-size: 36px;
+      color: var(--text);
+    }
+
+    @media (min-width: 768px) {
+      .hero-headline {
+        font-size: clamp(42px, 5vw, 64px);
+      }
+    }
+
+    .hero-sub {
+      margin-top: 8px;
+      font-size: 14px;
+      font-weight: 400;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .hero-lead {
+      margin-top: 24px;
+      font-size: 15px;
+      color: var(--text-muted);
+      max-width: 480px;
+    }
+
+    .btn-primary {
+      display: inline-block;
+      background: var(--accent);
+      color: var(--text);
+      font-family: "Raleway", sans-serif;
+      font-weight: 700;
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 16px 36px;
+      border-radius: 3px;
+      border: none;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      text-align: center;
+    }
+
+    .btn-primary:hover {
+      opacity: 0.92;
+    }
+
+    .hero-cta-wrap {
+      margin-top: 36px;
+    }
+
+    .hero-micro {
+      margin-top: 16px;
+      font-size: 11px;
+      color: #555555;
+    }
+
+    /* Visual card hero */
+    .hero-visual {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 28px 24px;
+    }
+
+    .hero-visual-row {
+      margin-bottom: 20px;
+    }
+
+    .hero-visual-row:last-of-type {
+      margin-bottom: 0;
+    }
+
+    .hero-visual-head {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .item-num {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--accent);
+    }
+
+    .hero-visual-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .progress-track {
+      height: 6px;
+      background: var(--bg-tertiary);
+      border-radius: 2px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 100%;
+      transform: scaleX(0);
+      transform-origin: left center;
+      background: linear-gradient(90deg, var(--accent), rgba(194, 107, 58, 0.65));
+      border-radius: 2px;
+      animation: progressFill 2.2s ease-in-out infinite;
+    }
+
+    .hero-visual-row:nth-child(2) .progress-fill {
+      animation-delay: 0.35s;
+    }
+
+    .hero-visual-row:nth-child(3) .progress-fill {
+      animation-delay: 0.7s;
+    }
+
+    @keyframes progressFill {
+      0% {
+        transform: scaleX(0);
+      }
+      42% {
+        transform: scaleX(1);
+      }
+      58% {
+        transform: scaleX(1);
+      }
+      59% {
+        transform: scaleX(0);
+      }
+      100% {
+        transform: scaleX(0);
+      }
+    }
+
+    .hero-visual-footer {
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 3.5px;
+      text-transform: uppercase;
+      color: var(--accent);
+      text-align: center;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 28px 32px;
+    }
+
+    .card--highlight {
+      border-left: 3px solid var(--accent);
+      background: rgba(194, 107, 58, 0.05);
+    }
+
+    .sep {
+      height: 1px;
+      background: var(--border);
+      width: 100%;
+    }
+
+    /* Avatar mirror icons */
+    .icon-num {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(194, 107, 58, 0.15);
+      border: 1px solid var(--accent-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+
+    .grid-2 {
+      display: grid;
+      gap: 20px;
+      margin-top: 40px;
+    }
+
+    @media (min-width: 768px) {
+      .grid-2 {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .mirror-card {
+      display: flex;
+      gap: 18px;
+      align-items: flex-start;
+    }
+
+    .mirror-card p {
+      font-size: 15px;
+      color: var(--text-muted);
+    }
+
+    /* Metrics */
+    .metrics-sub {
+      margin-top: 16px;
+      font-size: 13px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .metrics-grid {
+      display: grid;
+      gap: 20px;
+      margin-top: 40px;
+    }
+
+    @media (min-width: 768px) {
+      .metrics-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    .metric-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 28px 24px;
+      text-align: center;
+    }
+
+    .metric-compare {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .metric-before {
+      font-weight: 800;
+      font-size: 48px;
+      color: #555555;
+    }
+
+    .metric-arrow {
+      color: var(--accent);
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    .metric-after {
+      font-weight: 800;
+      font-size: 48px;
+      color: var(--text);
+    }
+
+    .metric-big {
+      font-weight: 800;
+      font-size: 72px;
+      color: var(--accent);
+      line-height: 1;
+    }
+
+    .metric-label {
+      margin-top: 16px;
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* Three components */
+    .tri-grid {
+      display: grid;
+      gap: 20px;
+      margin-top: 40px;
+    }
+
+    @media (min-width: 768px) {
+      .tri-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    .comp-icon {
+      width: 40px;
+      height: 40px;
+      border: 1px solid var(--accent);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 16px;
+    }
+
+    .comp-card h3 {
+      font-size: 17px;
+      font-weight: 800;
+      margin-bottom: 12px;
+      letter-spacing: -0.5px;
+    }
+
+    .comp-card p {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    /* Process timeline */
+    .timeline {
+      margin-top: 48px;
+      max-width: 640px;
+    }
+
+    .timeline-step {
+      position: relative;
+      padding-left: 36px;
+      padding-bottom: 36px;
+    }
+
+    .timeline-step:last-child {
+      padding-bottom: 0;
+    }
+
+    .timeline-step::before {
+      content: "";
+      position: absolute;
+      left: 11px;
+      top: 28px;
+      bottom: -8px;
+      width: 1px;
+      background: var(--border);
+    }
+
+    .timeline-step:last-child::before {
+      display: none;
+    }
+
+    .timeline-dot {
+      position: absolute;
+      left: 0;
+      top: 4px;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--bg-main);
+      border: 2px solid var(--accent);
+      z-index: 1;
+    }
+
+    .timeline-num {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+
+    .timeline-step h3 {
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .timeline-step p {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    /* Para quem */
+    .two-col {
+      display: grid;
+      gap: 40px;
+      margin-top: 40px;
+    }
+
+    @media (min-width: 768px) {
+      .two-col {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .list-title {
+      font-size: 18px;
+      font-weight: 800;
+      margin-bottom: 20px;
+    }
+
+    .list-check {
+      list-style: none;
+    }
+
+    .list-check li {
+      position: relative;
+      padding-left: 22px;
+      margin-bottom: 14px;
+      font-size: 15px;
+      color: var(--text-muted);
+    }
+
+    .list-check li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 9px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    .list-muted li::before {
+      background: #555555;
+    }
+
+    /* About */
+    .about-grid {
+      display: grid;
+      gap: 40px;
+      align-items: start;
+      margin-top: 40px;
+    }
+
+    @media (min-width: 768px) {
+      .about-grid {
+        grid-template-columns: 280px 1fr;
+      }
+    }
+
+    .about-photo {
+      width: 100%;
+      max-width: 280px;
+      height: 380px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      margin: 0 auto;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #555555;
+      font-size: 14px;
+    }
+
+    .about-photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center 20%;
+      display: block;
+    }
+
+    .about-photo::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, var(--bg-secondary) 0%, transparent 45%);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .about-text .section-tag {
+      margin-bottom: 8px;
+    }
+
+    .about-label {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 3.5px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 20px;
+    }
+
+    .about-text p {
+      font-size: 15px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+
+    .about-strong {
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .about-handle {
+      margin-top: 20px;
+      font-size: 12px;
+      letter-spacing: 2px;
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    /* FAQ */
+    .faq-title {
+      font-weight: 800;
+      font-size: 26px;
+      letter-spacing: -0.5px;
+      line-height: 1.1;
+    }
+
+    @media (min-width: 768px) {
+      .faq-title {
+        font-size: 32px;
+      }
+    }
+
+    .accordion {
+      margin-top: 40px;
+      max-width: 720px;
+    }
+
+    .accordion-item {
+      border-bottom: 1px solid var(--border);
+    }
+
+    .accordion-trigger {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding: 20px 0;
+      background: none;
+      border: none;
+      color: var(--text);
+      cursor: pointer;
+      text-align: left;
+      font-size: 15px;
+      font-weight: 600;
+      font-family: inherit;
+    }
+
+    .accordion-icon {
+      color: var(--accent);
+      font-size: 22px;
+      font-weight: 400;
+      flex-shrink: 0;
+      transition: transform 0.25s ease;
+    }
+
+    .accordion-item.is-open .accordion-icon {
+      transform: rotate(180deg);
+    }
+
+    .accordion-panel {
+      display: grid;
+      grid-template-rows: 0fr;
+      transition: grid-template-rows 0.35s ease;
+    }
+
+    .accordion-item.is-open .accordion-panel {
+      grid-template-rows: 1fr;
+    }
+
+    .accordion-panel-inner {
+      overflow: hidden;
+    }
+
+    .accordion-answer {
+      font-size: 13px;
+      color: var(--text-muted);
+      padding-bottom: 20px;
+      padding-top: 12px;
+      line-height: 1.65;
+    }
+
+    /* CTA final */
+    .cta-final {
+      text-align: center;
+      position: relative;
+    }
+
+    .cta-final::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: min(90vw, 520px);
+      height: 280px;
+      background: radial-gradient(circle, rgba(194, 107, 58, 0.12) 0%, transparent 65%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .cta-final .container {
+      position: relative;
+      z-index: 2;
+    }
+
+    .cta-lead {
+      font-size: 16px;
+      color: var(--text-muted);
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    .cta-headline {
+      margin-top: 16px;
+      font-weight: 800;
+      font-size: clamp(36px, 8vw, 48px);
+      color: var(--text);
+      line-height: 1.05;
+    }
+
+    .cta-italic {
+      display: block;
+      font-weight: 300;
+      font-style: italic;
+      color: var(--accent);
+    }
+
+    .cta-sub {
+      margin-top: 20px;
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    /* Form */
+    .form-wrap {
+      max-width: 540px;
+      margin: 40px auto 0;
+    }
+
+    .form-title-block {
+      text-align: center;
+    }
+
+    .form-title {
+      font-weight: 800;
+      font-size: 28px;
+    }
+
+    @media (min-width: 768px) {
+      .form-title {
+        font-size: 32px;
+      }
+    }
+
+    .form-sub {
+      margin-top: 12px;
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .form-field {
+      width: 100%;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 14px 18px;
+      color: var(--text);
+      font-family: "Raleway", sans-serif;
+      font-size: 14px;
+      font-weight: 400;
+      margin-bottom: 12px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .form-field::placeholder {
+      color: #555555;
+    }
+
+    .form-field:focus {
+      border-color: var(--accent);
+    }
+
+    select.form-field {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888888' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 16px center;
+      padding-right: 40px;
+    }
+
+    textarea.form-field {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 18px;
+      font-family: "Raleway", sans-serif;
+      font-weight: 800;
+      font-size: 12px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      background: var(--accent);
+      color: var(--text);
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .btn-submit:hover {
+      opacity: 0.92;
+    }
+
+    .form-hint {
+      font-size: 11px;
+      color: #555555;
+      text-align: center;
+      margin-top: 12px;
+    }
+
+    .form-error {
+      color: #c26b3a;
+      font-size: 12px;
+      margin: -8px 0 12px;
+      display: none;
+    }
+
+    .form-error.is-visible {
+      display: block;
+    }
+
+    /* Footer */
+    .footer {
+      border-top: 1px solid var(--border);
+      padding: 48px 0 32px;
+      background: var(--bg-main);
+    }
+
+    .footer-grid {
+      display: grid;
+      gap: 28px;
+      text-align: center;
+    }
+
+    @media (min-width: 768px) {
+      .footer-grid {
+        grid-template-columns: 1fr 1fr 1fr;
+        text-align: left;
+        align-items: start;
+      }
+
+      .footer-col--right {
+        text-align: right;
+      }
+    }
+
+    .footer-name {
+      font-weight: 700;
+      color: var(--text);
+      font-size: 15px;
+    }
+
+    .footer-role {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .footer-center a {
+      display: block;
+      font-size: 13px;
+    }
+
+    .footer-copy {
+      font-size: 11px;
+      color: #555555;
+    }
+
+    /* Reveal animation */
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+
+    .reveal.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .reveal-stagger > .reveal-child {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+
+    .reveal-stagger.is-visible > .reveal-child {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .reveal-stagger.is-visible > .reveal-child:nth-child(1) {
+      transition-delay: 0s;
+    }
+
+    .reveal-stagger.is-visible > .reveal-child:nth-child(2) {
+      transition-delay: 0.08s;
+    }
+
+    .reveal-stagger.is-visible > .reveal-child:nth-child(3) {
+      transition-delay: 0.16s;
+    }
+
+    .reveal-stagger.is-visible > .reveal-child:nth-child(4) {
+      transition-delay: 0.24s;
+    }
+
+    .reveal-stagger.is-visible > .reveal-child:nth-child(5) {
+      transition-delay: 0.32s;
+    }
+
+    .reveal-stagger.is-visible > .reveal-child:nth-child(6) {
+      transition-delay: 0.4s;
+    }
+
+    .text-center {
+      text-align: center;
+    }
+
+    .mx-auto {
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .max-w-prose {
+      max-width: 600px;
+    }
+
+    .mt-32 {
+      margin-top: 32px;
+    }
+
+    .mt-40 {
+      margin-top: 40px;
+    }
+
+    .center-block {
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @media (max-width: 767px) {
+      .hide-mobile {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- HERO -->
+  <section class="section-shell hero" id="top">
+    <div class="section-glow section-glow--tl" aria-hidden="true"></div>
+    <div class="section-glow section-glow--br" aria-hidden="true"></div>
+    <div class="corner-deco corner-deco--tl" aria-hidden="true"></div>
+    <div class="corner-deco corner-deco--br" aria-hidden="true"></div>
+    <div class="hero-stripe" aria-hidden="true"></div>
+
+    <header class="nav">
+      <div class="nav-inner">
+        <div>
+          <span class="nav-brand-name">João Paulo</span>
+          <span class="nav-brand-label">Estrategista de IA para Negócios</span>
+        </div>
+        <a class="nav-link" href="https://eusouojoaopaulo.com.br" target="_blank" rel="noopener noreferrer">eusouojoaopaulo.com.br</a>
+      </div>
+    </header>
+
+    <div class="container" style="flex: 1; display: flex; align-items: center;">
+      <div class="hero-grid" style="width: 100%;">
+        <div class="reveal">
+          <span class="section-tag">SISTEMA DE PRESENÇA AUTÔNOMA</span>
+          <div class="section-divider"></div>
+          <h1 class="hero-headline">
+            Você fatura todo mês.<br />
+            Mas some do digital, demora<br />
+            para responder lead e ainda<br />
+            não tem um processo de<br />
+            captação funcionando.
+          </h1>
+          <p class="hero-sub">ISSO NÃO É FALTA DE TEMPO. É FALTA DE ESTRUTURA.</p>
+          <p class="hero-lead">
+            Eu implanto a infraestrutura que faz seu negócio aparecer, captar e atender clientes com muito menos presença manual sua.
+          </p>
+          <div class="hero-cta-wrap">
+            <a class="btn-primary" href="#formulario">QUERO UMA ANÁLISE GRATUITA</a>
+            <p class="hero-micro">Gratuita. Sem compromisso. Sem enrolação.</p>
+          </div>
+        </div>
+
+        <div class="reveal">
+          <div class="hero-visual">
+            <div class="hero-visual-row">
+              <div class="hero-visual-head">
+                <span class="item-num">01</span>
+                <span class="hero-visual-title">Conteúdo com IA</span>
+              </div>
+              <div class="progress-track"><div class="progress-fill"></div></div>
+            </div>
+            <div class="hero-visual-row">
+              <div class="hero-visual-head">
+                <span class="item-num">02</span>
+                <span class="hero-visual-title">Atendimento Ativo</span>
+              </div>
+              <div class="progress-track"><div class="progress-fill"></div></div>
+            </div>
+            <div class="hero-visual-row">
+              <div class="hero-visual-head">
+                <span class="item-num">03</span>
+                <span class="hero-visual-title">Captação Direta</span>
+              </div>
+              <div class="progress-track"><div class="progress-fill"></div></div>
+            </div>
+            <div class="hero-visual-footer">Sistema instalado em 72h</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SEÇÃO 2 -->
+  <section class="section-shell section-padding" style="background: #141414;">
+    <div class="section-glow section-glow--tl" aria-hidden="true"></div>
+    <div class="section-glow section-glow--br" aria-hidden="true"></div>
+    <div class="corner-deco corner-deco--tl" aria-hidden="true"></div>
+    <div class="corner-deco corner-deco--br" aria-hidden="true"></div>
+    <div class="container">
+      <div class="reveal">
+        <span class="section-tag">VOCÊ SE RECONHECE AQUI</span>
+        <div class="section-divider"></div>
+        <h2 class="title-section">
+          Você provavelmente se reconhece<br class="hide-mobile" />
+          em pelo menos um desses cenários.
+        </h2>
+      </div>
+      <div class="grid-2 reveal-stagger" id="mirror-grid">
+        <article class="card mirror-card reveal-child">
+          <div class="icon-num">01</div>
+          <p>Você some do Instagram por semanas e sabe que está perdendo cliente para quem aparece mais.</p>
+        </article>
+        <article class="card mirror-card reveal-child">
+          <div class="icon-num">02</div>
+          <p>Seu WhatsApp tem lead que você ainda não respondeu de ontem.</p>
+        </article>
+        <article class="card mirror-card reveal-child">
+          <div class="icon-num">03</div>
+          <p>Você já tentou social media, gestor de tráfego e curso. O problema continua o mesmo.</p>
+        </article>
+        <article class="card mirror-card reveal-child">
+          <div class="icon-num">04</div>
+          <p>Quando você para, o negócio para junto. Tudo depende de você estar presente.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- SEÇÃO 3 -->
+  <section class="section-shell section-padding" style="background: #0D0D0D;">
+    <div class="section-glow section-glow--tl" aria-hidden="true"></div>
+    <div class="section-glow section-glow--br" aria-hidden="true"></div>
+    <div class="corner-deco corner-deco--tl" aria-hidden="true"></div>
+    <div class="corner-deco corner-deco--br" aria-hidden="true"></div>
+    <div class="container text-center">
+      <div class="reveal">
+        <span class="section-tag">O DIAGNÓSTICO</span>
+        <div class="section-divider" style="margin-left: auto; margin-right: auto;"></div>
+        <h2 class="title-section">
+          O problema não é você.<br />
+          É que ninguém instalou<br />
+          a estrutura certa.
+        </h2>
+      </div>
+      <div class="reveal mt-40">
+        <p class="max-w-prose mx-auto" style="font-size: 15px; color: #888888;">
+          Ferramentas exigem que você as opere. Mentoria exige que você aprenda e aplique. Cada uma dessas soluções coloca o dono no centro para funcionar.
+        </p>
+        <p class="max-w-prose mx-auto mt-32" style="font-size: 15px; color: #888888;">
+          O que falta não é mais esforço. É uma infraestrutura instalada que funcione com menos de você.
+        </p>
+        <div class="card card--highlight center-block text-center" style="margin-top: 32px; max-width: 560px; padding: 24px 32px;">
+          <p style="font-weight: 800; font-size: 20px; color: #FFFFFF;">Ferramenta você opera.</p>
+          <p class="italic-accent" style="font-size: 20px; margin-top: 8px;">Estrutura reduz o quanto você precisa operar.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SEÇÃO 4 -->
+  <section class="section-shell section-padding" style="background: #141414;">
+    <div class="section-glow section-glow--tl" aria-hidden="true"></div>
+    <div class="section-glow section-glow--br" aria-hidden="true"></div>
+    <div class="corner-deco corner-deco--tl" aria-hidden="true"></div>
+    <div class="corner-deco corner-deco--br" aria-hidden="true"></div>
+    <div class="container">
+      <div class="reveal">
+        <span class="section-tag">RESULTADO</span>
+        <div class="section-divider"></div>
+        <h2 class="title-section">
+          O que muda quando<br />
+          a estrutura está instalada
+        </h2>
+        <p class="metrics-sub">NÚMEROS REAIS DO SISTEMA DE PRESENÇA AUTÔNOMA EM OPERAÇÃO</p>
+      </div>
+      <div class="metrics-grid reveal-stagger" id="metrics-grid">
+        <div class="metric-card reveal-child">
+          <div class="metric-compare">
+            <span class="metric-before">4h</span>
+            <span class="metric-arrow" aria-hidden="true">→</span>
+            <span class="metric-after">30seg</span>
+          </div>
+          <p class="metric-label">Tempo médio de resposta ao lead</p>
+        </div>
+        <div class="metric-card reveal-child">
+          <div class="metric-big">70%</div>
+          <p class="metric-label">de redução na dependência operacional do dono</p>
+        </div>
+        <div class="metric-card reveal-child">
+          <div class="metric-after" style="font-size: 48px;">72h</div>
+          <p class="metric-label">para o sistema estar instalado e funcionando</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SEÇÃO 5 -->
+  <section class="section-shell section-padding" style="background: #0D0D0D;">
+    <div class="section-glow section-glow--tl" aria-hidden="true"></div>
+    <div class="section-glow section-glow--br" aria-hidden="true"></div>
+    <div class="corner-deco corner-deco--tl" aria-hidden="true"></div>
+    <div class="corner-deco corner-deco--br" aria-hidden="true"></div>
+    <div class="container">
+      <div class="reveal">
+        <span class="section-tag">MECANISMO ÚNICO</span>
+        <div class="section-divider"></div>
+        <h2 class="title-section">
+          Eu instalo a infraestrutura que<br />
+          o seu negócio precisa para captar<br />
+          e atender clientes com menos<br />
+          presença manual sua.
+        </h2>
+      </div>
+      <div class="tri-grid reveal-stagger" id="tri-grid">
+        <article class="card comp-card reveal-child">
+          <div class="comp-icon">C</div>
+          <h3>Conteúdo com IA</h3>
+          <p>Produção e publicação de conteúdo calibrado para o seu nicho. Você não grava, não escreve, não agenda.</p>
+        </article>
+        <article class="card comp-card reveal-child">
+          <div class="comp-icon">A</div>
+          <h3>Atendimento Ativo</h3>
+          <p>Agente de IA que responde, nutre e conduz o lead no WhatsApp e no Direct enquanto você faz outra coisa.</p>
+        </article>
+        <article class="card comp-card reveal-child">
+          <div class="comp-icon">F</div>
+          <h3>Captação Direta</h3>
+          <p>Funil automatizado que recebe o lead, qualifica e entrega para você só quem já está pronto para comprar.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- SEÇÃO 6 -->
+  <section class="section-shell section-padding" style="background: #141414;">
+    <div class="section-glow section-glow--tl" aria-hidden="true"></div>
+    <div class="section-glow section-glow--br" aria-hidden="true"></div>
+    <div class="corner-deco corner-deco--tl" aria-hidden="true"></div>
+    <div class="corner-deco corner-deco--br" aria-hidden="true"></div>
+    <div class="container">
+      <div class="reveal">
+        <span class="section-tag">COMO FUNCIONA</span>
+        <div class="section-divider"></div>
+        <h2 class="title-section">Não é consultoria de gaveta.<br />É implementação.</h2>
+      </div>
+      <div class="timeline reveal">
+        <div class="timeline-step">
+          <span class="timeline-dot" aria-hidden="true"></span>
+          <p class="timeline-num">ETAPA 01</p>
+          <h3>Conversa Estratégica gratuita</h3>
+          <p>Análise do seu negócio e mapeamento do que está travando a captação. Sem compromisso.</p>
+        </div>
+        <div class="timeline-step">
+          <span class="timeline-dot" aria-hidden="true"></span>
+          <p class="timeline-num">ETAPA 02</p>
+          <h3>Diagnóstico preciso</h3>
+          <p>Identifico onde está a maior perda de lead e defino o que instalar primeiro para gerar resultado mais rápido.</p>
+        </div>
+        <div class="timeline-step">
+          <span class="timeline-dot" aria-hidden="true"></span>
+          <p class="timeline-num">ETAPA 03</p>
+          <h3>Implementação</h3>
+          <p>Entro na operação e instalo. Você não precisa aprender a operar o que foi instalado.</p>
+        </div>
+        <div class="timeline-step">
+          <span class="timeline-dot" aria-hidden="true"></span>
+          <p class="timeline-num">ETAPA 04</p>
+          <h3>Acompanhamento</h3>
+          <p>30 dias de suporte após a entrega para garantir que está funcionando e ajustar o que for necessário.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SEÇÃO 7 -->
+  <section class="section-shell section-padding" style="background: #0D0D0D;">
+    <div class="section-glow section-glow--tl" aria-hidden="true"></div>
+    <div class="section-glow section-glow--br" aria-hidden="true"></div>
+    <div class="corner-deco corner-deco--tl" aria-hidden="true"></div>
+    <div class="corner-deco corner-deco--br" aria-hidden="true"></div>
+    <div class="container">
+      <div class="reveal">
+        <span class="section-tag">CRITÉRIO</span>
+        <div class="section-divider"></div>
+        <h2 class="title-section">Esse trabalho é para você.</h2>
+      </div>
+      <div class="two-col">
+        <div class="reveal">
+          <h3 class="list-title">É para você se:</h3>
+          <ul class="list-check">
+            <li>Você já fatura entre R$20k e R$150k por mês</li>
+            <li>Seu negócio funciona, mas ainda depende de você para quase tudo</li>
+            <li>Você já tentou outras soluções e o problema estrutural continua</li>
+            <li>Você decide por resultado concreto e prazo claro, não por processo ou tecnologia</li>
+          </ul>
+        </div>
+        <div class="reveal">
+          <h3 class="list-title">Não é para você se:</h3>
+          <ul class="list-check list-muted">
+            <li>Está começando e ainda não tem negócio validado</li>
+            <li>Quer aprender a fazer, não quer que façam por você</li>
+            <li>Não tem orçamento para investir em implementação agora</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SEÇÃO 8 -->
+  <section class="section-shell section-padding" style="background: #141414;">
+    <div class="section-glow section-glow--tl" aria-hidden="true"></div>
+    <div class="section-glow section-glow--br" aria-hidden="true"></div>
+    <div class="corner-deco corner-deco--tl" aria-hidden="true"></div>
+    <div class="corner-deco corner-deco--br" aria-hidden="true"></div>
+    <div class="container">
+      <div class="reveal">
+        <span class="section-tag">QUEM IMPLANTA</span>
+        <div class="section-divider"></div>
+      </div>
+      <div class="about-grid">
+        <div class="about-photo reveal">
+          <img
+            src="https://i.postimg.cc/PxK3Vtqs/man-standing-in-front-of-the-arc-de-triomphe-wearing-a-camel-overcoat-black-scarf-black-turtleneck-a.jpg"
+            alt="João Paulo da Silva — retrato em Paris, Arco do Triunfo ao fundo"
+            width="280"
+            height="380"
+            loading="lazy"
+            decoding="async"
+          />
+        </div>
+        <div class="about-text reveal">
+          <span class="section-tag">JOÃO PAULO DA SILVA</span>
+          <p class="about-label">ESTRATEGISTA DE IA PARA NEGÓCIOS</p>
+          <p>
+            Trabalho exclusivamente na implementação. Entro na operação do cliente, mapeio onde o negócio está preso e instalo a estrutura que reduz a dependência operacional do dono.
+          </p>
+          <p>
+            Vivo como nômade digital, atendo clientes no Brasil e no exterior, e uso a própria rotina como prova real do modelo que entrego.
+          </p>
+          <p class="about-strong">Se o sistema não funcionar para mim, não entrego para ninguém.</p>
+          <p class="about-handle">@eusouojoaopaulo</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SEÇÃO 9 FAQ -->
+  <section class="section-shell section-padding" style="background: #0D0D0D;">
+    <div class="section-glow section-glow--tl" aria-hidden="true"></div>
+    <div class="section-glow section-glow--br" aria-hidden="true"></div>
+    <div class="corner-deco corner-deco--tl" aria-hidden="true"></div>
+    <div class="corner-deco corner-deco--br" aria-hidden="true"></div>
+    <div class="container">
+      <div class="reveal">
+        <span class="section-tag">DÚVIDAS FREQUENTES</span>
+        <div class="section-divider"></div>
+        <h2 class="faq-title">Perguntas que aparecem<br />com frequência</h2>
+      </div>
+      <div class="accordion reveal" id="faq-accordion">
+        <div class="accordion-item">
+          <button type="button" class="accordion-trigger" aria-expanded="false">
+            <span>Quanto tempo leva para ver resultado?</span>
+            <span class="accordion-icon" aria-hidden="true">+</span>
+          </button>
+          <div class="accordion-panel">
+            <div class="accordion-panel-inner">
+              <p class="accordion-answer">
+                O sistema básico fica instalado e funcionando em até 72 horas após o início da implementação. Os primeiros resultados em captação automática de leads aparecem na primeira semana.
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="accordion-item">
+          <button type="button" class="accordion-trigger" aria-expanded="false">
+            <span>Eu preciso entender de IA para isso funcionar?</span>
+            <span class="accordion-icon" aria-hidden="true">+</span>
+          </button>
+          <div class="accordion-panel">
+            <div class="accordion-panel-inner">
+              <p class="accordion-answer">
+                Não. Você não precisa aprender nada. Eu instalo, configuro e entrego funcionando. Se tiver algum ajuste necessário depois, faço parte do acompanhamento de 30 dias.
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="accordion-item">
+          <button type="button" class="accordion-trigger" aria-expanded="false">
+            <span>O que acontece depois da implementação?</span>
+            <span class="accordion-icon" aria-hidden="true">+</span>
+          </button>
+          <div class="accordion-panel">
+            <div class="accordion-panel-inner">
+              <p class="accordion-answer">
+                Você tem 30 dias de suporte direto comigo via WhatsApp para ajustes e dúvidas. Depois disso, pode continuar com a assessoria mensal ou operar de forma independente com o que foi instalado.
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="accordion-item">
+          <button type="button" class="accordion-trigger" aria-expanded="false">
+            <span>Quanto custa uma implementação completa?</span>
+            <span class="accordion-icon" aria-hidden="true">+</span>
+          </button>
+          <div class="accordion-panel">
+            <div class="accordion-panel-inner">
+              <p class="accordion-answer">
+                O valor depende do escopo de cada negócio. Por isso existe a Conversa Estratégica gratuita: para eu entender o que você precisa e te apresentar a proposta certa. Sem surpresa, sem enrolação.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SEÇÃO 10 CTA -->
+  <section class="section-shell section-padding cta-final" style="background: #141414;">
+    <div class="section-glow section-glow--tl" aria-hidden="true"></div>
+    <div class="section-glow section-glow--br" aria-hidden="true"></div>
+    <div class="corner-deco corner-deco--tl" aria-hidden="true"></div>
+    <div class="corner-deco corner-deco--br" aria-hidden="true"></div>
+    <div class="container">
+      <div class="reveal">
+        <span class="section-tag">PRÓXIMO PASSO</span>
+        <div class="section-divider" style="margin-left: auto; margin-right: auto;"></div>
+        <p class="cta-lead">
+          Se o seu negócio está ativo mas a captação ainda depende de você para aparecer, responder e correr atrás,
+        </p>
+        <p class="cta-headline">
+          É estrutura.<br />
+          <span class="cta-italic">Não é esforço.</span>
+        </p>
+        <p class="cta-sub">A estrutura ainda não está instalada. Mas pode estar em 72 horas.</p>
+        <div style="margin-top: 32px;">
+          <a class="btn-primary" href="#formulario">QUERO UMA ANÁLISE GRATUITA</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SEÇÃO 11 FORM -->
+  <section class="section-shell section-padding" id="formulario" style="background: #0D0D0D;">
+    <div class="section-glow section-glow--tl" aria-hidden="true"></div>
+    <div class="section-glow section-glow--br" aria-hidden="true"></div>
+    <div class="corner-deco corner-deco--tl" aria-hidden="true"></div>
+    <div class="corner-deco corner-deco--br" aria-hidden="true"></div>
+    <div class="container">
+      <div class="form-title-block reveal">
+        <span class="section-tag">CONVERSA ESTRATÉGICA GRATUITA</span>
+        <div class="section-divider" style="margin-left: auto; margin-right: auto;"></div>
+        <h2 class="form-title">Preencha abaixo.</h2>
+        <p class="form-sub">Sem compromisso. Sem enrolação. Eu leio pessoalmente.</p>
+      </div>
+      <form class="form-wrap reveal" id="lead-form" novalidate>
+        <p id="form-error-msg" class="form-error" role="alert"></p>
+        <label class="visually-hidden" for="nome">Nome completo</label>
+        <input class="form-field" type="text" id="nome" name="nome" placeholder="Seu nome completo" required autocomplete="name" />
+
+        <label class="visually-hidden" for="whatsapp">WhatsApp</label>
+        <input class="form-field" type="tel" id="whatsapp" name="whatsapp" placeholder="(00) 00000-0000" required autocomplete="tel" />
+
+        <label class="visually-hidden" for="segmento">Segmento</label>
+        <input class="form-field" type="text" id="segmento" name="segmento" placeholder="Ex: clínica, imobiliária, academia..." required />
+
+        <label class="visually-hidden" for="faturamento">Faturamento</label>
+        <select class="form-field" id="faturamento" name="faturamento" required>
+          <option value="" disabled selected>Faturamento mensal aproximado</option>
+          <option value="Até R$20k">Até R$20k</option>
+          <option value="R$20k a R$50k">R$20k a R$50k</option>
+          <option value="R$50k a R$100k">R$50k a R$100k</option>
+          <option value="Acima de R$100k">Acima de R$100k</option>
+        </select>
+
+        <label class="visually-hidden" for="problema">Problema</label>
+        <textarea class="form-field" id="problema" name="problema" rows="4" placeholder="Descreve em poucas palavras o que está travando..." required></textarea>
+
+        <button type="submit" class="btn-submit">QUERO MINHA ANÁLISE GRATUITA</button>
+        <p class="form-hint">Ao enviar, você será redirecionado para o WhatsApp.</p>
+      </form>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container footer-grid">
+      <div class="footer-col">
+        <p class="footer-name">João Paulo da Silva</p>
+        <p class="footer-role">Estrategista de IA para Negócios</p>
+      </div>
+      <div class="footer-col footer-center">
+        <span style="display: block; color: #C26B3A; font-weight: 600;">@eusouojoaopaulo</span>
+        <a href="https://eusouojoaopaulo.com.br" target="_blank" rel="noopener noreferrer" style="display: block; color: #888888; margin-top: 6px;">eusouojoaopaulo.com.br</a>
+      </div>
+      <div class="footer-col footer-col--right">
+        <p class="footer-copy">© 2026 · Todos os direitos reservados</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      var WHATSAPP_E164 = "5561981784728";
+
+      /* IntersectionObserver reveal */
+      var revealEls = document.querySelectorAll(".reveal");
+      var staggerEls = document.querySelectorAll(".reveal-stagger");
+
+      if ("IntersectionObserver" in window) {
+        var io = new IntersectionObserver(
+          function (entries, obs) {
+            entries.forEach(function (entry) {
+              if (entry.isIntersecting) {
+                entry.target.classList.add("is-visible");
+                obs.unobserve(entry.target);
+              }
+            });
+          },
+          { root: null, threshold: 0.12, rootMargin: "0px 0px -40px 0px" }
+        );
+
+        revealEls.forEach(function (el) {
+          io.observe(el);
+        });
+        staggerEls.forEach(function (el) {
+          io.observe(el);
+        });
+      } else {
+        revealEls.forEach(function (el) {
+          el.classList.add("is-visible");
+        });
+        staggerEls.forEach(function (el) {
+          el.classList.add("is-visible");
+        });
+      }
+
+      /* FAQ accordion */
+      var acc = document.getElementById("faq-accordion");
+      if (acc) {
+        acc.querySelectorAll(".accordion-item").forEach(function (item) {
+          var btn = item.querySelector(".accordion-trigger");
+          var icon = item.querySelector(".accordion-icon");
+          btn.addEventListener("click", function () {
+            var open = item.classList.contains("is-open");
+            acc.querySelectorAll(".accordion-item").forEach(function (other) {
+              other.classList.remove("is-open");
+              var b = other.querySelector(".accordion-trigger");
+              if (b) b.setAttribute("aria-expanded", "false");
+              var ic = other.querySelector(".accordion-icon");
+              if (ic) ic.textContent = "+";
+            });
+            if (!open) {
+              item.classList.add("is-open");
+              btn.setAttribute("aria-expanded", "true");
+              if (icon) icon.textContent = "−";
+            }
+          });
+        });
+      }
+
+      /* Form */
+      var form = document.getElementById("lead-form");
+      var errBox = document.getElementById("form-error-msg");
+
+      function showError(msg) {
+        if (errBox) {
+          errBox.textContent = msg;
+          errBox.classList.add("is-visible");
+        }
+      }
+
+      function clearError() {
+        if (errBox) {
+          errBox.textContent = "";
+          errBox.classList.remove("is-visible");
+        }
+      }
+
+      if (form) {
+        form.addEventListener("submit", function (e) {
+          e.preventDefault();
+          clearError();
+
+          var nome = (document.getElementById("nome") || {}).value.trim();
+          var whatsapp = (document.getElementById("whatsapp") || {}).value.trim();
+          var segmento = (document.getElementById("segmento") || {}).value.trim();
+          var fatEl = document.getElementById("faturamento");
+          var faturamento = fatEl ? fatEl.value : "";
+          var problema = (document.getElementById("problema") || {}).value.trim();
+
+          if (!nome || !whatsapp || !segmento || !faturamento || !problema) {
+            showError("Preencha todos os campos para continuar.");
+            return;
+          }
+
+          var digits = whatsapp.replace(/\D/g, "");
+          if (digits.length < 10) {
+            showError("Informe um WhatsApp válido com DDD.");
+            return;
+          }
+
+          var msg =
+            "Olá JP, vim pela análise do meu negócio, o meu perfil é:\n\n" +
+            "Nome completo:\n" +
+            nome +
+            "\n\n" +
+            "WhatsApp:\n" +
+            whatsapp +
+            "\n\n" +
+            "Segmento do negócio:\n" +
+            segmento +
+            "\n\n" +
+            "Faturamento mensal aproximado:\n" +
+            faturamento +
+            "\n\n" +
+            "Maior problema na captação hoje:\n" +
+            problema;
+
+          var url = "https://wa.me/" + WHATSAPP_E164 + "?text=" + encodeURIComponent(msg);
+          window.open(url, "_blank");
+        });
+      }
+    })();
+  </script>
+</body>
+</html>
