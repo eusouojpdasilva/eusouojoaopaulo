@@ -45,30 +45,7 @@
     }
 
     /* ── NAV ── */
-    nav {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 32px 56px;
-      mix-blend-mode: difference;
-    }
-    .nav-logo {
-      font-weight: 800; font-size: 13px;
-      letter-spacing: .18em; text-transform: uppercase;
-      color: var(--white); text-decoration: none;
-    }
-    .nav-links { display: flex; gap: 48px; list-style: none; }
-    .nav-links a {
-      font-weight: 500; font-size: 14px; letter-spacing: -.02em;
-      color: var(--white); text-decoration: none; transition: opacity .25s;
-    }
-    .nav-links a:hover { opacity: .5; }
-    .nav-cta {
-      font-weight: 700; font-size: 9px;
-      letter-spacing: .3em; text-transform: uppercase;
-      color: var(--white); border: 1px solid var(--white);
-      padding: 10px 20px; text-decoration: none; transition: opacity .25s;
-    }
-    .nav-cta:hover { opacity: .5; }
+    /* nav removido */
 
     /* ── HERO ── */
     .hero {
@@ -101,20 +78,21 @@
     }
     .hero-h1 {
       font-weight: 800;
-      font-size: clamp(48px, 8vw, 104px);
+      font-size: clamp(44px, 7.5vw, 96px);
       letter-spacing: -.03em; line-height: .94;
-      color: var(--off); margin-bottom: 36px;
+      color: var(--off); margin-bottom: 40px;
     }
     .hero-h1 em { font-weight: 300; font-style: italic; color: var(--terra); }
     .hero-sub {
-      font-weight: 300; font-size: clamp(16px, 1.6vw, 20px);
-      line-height: 1.75; color: rgba(255,255,255,.72);
-      max-width: 620px; margin: 0 auto 28px;
+      font-weight: 300; font-size: clamp(15px, 1.4vw, 18px);
+      line-height: 1.75; color: rgba(255,255,255,.55);
+      max-width: 600px; margin: 0 auto 36px;
     }
     .hero-desc {
-      font-weight: 400; font-size: clamp(15px, 1.5vw, 18px);
-      line-height: 1.8; color: var(--off);
-      max-width: 580px; margin: 0 auto 52px;
+      font-weight: 600; font-size: clamp(18px, 2vw, 24px);
+      line-height: 1.55; color: var(--white);
+      max-width: 560px; margin: 0 auto 52px;
+      letter-spacing: -.01em;
     }
     .hero-btns {
       display: flex; align-items: center; justify-content: center; gap: 28px;
@@ -145,26 +123,26 @@
       margin: 0 auto 72px;
     }
     .sec-tag {
-      font-weight: 700; font-size: 9px;
+      font-weight: 700; font-size: 10px;
       letter-spacing: .35em; text-transform: uppercase;
       color: var(--terra);
       display: inline-flex; align-items: center; gap: 12px;
-      margin-bottom: 36px;
+      margin-bottom: 32px;
     }
     .sec-tag::before, .sec-tag::after {
       content: ''; width: 32px; height: 1px; background: var(--terra);
     }
     .sec-h2 {
       font-weight: 800;
-      font-size: clamp(36px, 5.5vw, 76px);
-      letter-spacing: -.03em; line-height: .95;
+      font-size: clamp(32px, 5vw, 68px);
+      letter-spacing: -.03em; line-height: .97;
       color: var(--white);
     }
     .sec-h2 em { font-weight: 300; font-style: italic; color: var(--terra); }
     .sec-intro {
-      font-weight: 300; font-size: 17px;
+      font-weight: 300; font-size: clamp(15px, 1.4vw, 18px);
       line-height: 1.8; color: var(--off);
-      margin-top: 24px;
+      margin-top: 20px;
     }
 
     /* ── SISTEMA (4 cards) ── */
@@ -202,14 +180,14 @@
       pointer-events: none;
     }
     .sys-lbl {
-      font-weight: 700; font-size: 9px;
+      font-weight: 700; font-size: 10px;
       letter-spacing: .35em; text-transform: uppercase;
-      color: var(--terra); margin-bottom: 32px; display: block;
+      color: var(--terra); margin-bottom: 28px; display: block;
     }
     .sys-title {
-      font-weight: 800; font-size: 19px;
+      font-weight: 800; font-size: 20px;
       letter-spacing: -.02em; color: var(--white);
-      margin-bottom: 14px; position: relative; z-index: 1;
+      margin-bottom: 12px; position: relative; z-index: 1;
     }
     .sys-desc {
       font-weight: 300; font-size: 15px;
@@ -245,17 +223,17 @@
     }
     .step:hover .step-ghost { color: var(--t15); }
     .step-lbl {
-      font-weight: 700; font-size: 9px;
+      font-weight: 700; font-size: 10px;
       letter-spacing: .35em; text-transform: uppercase;
-      color: var(--terra); margin-bottom: 28px; display: block;
+      color: var(--terra); margin-bottom: 24px; display: block;
     }
     .step-title {
-      font-weight: 800; font-size: 18px;
+      font-weight: 800; font-size: 19px;
       letter-spacing: -.02em; color: var(--white);
-      margin-bottom: 14px; position: relative; z-index: 1;
+      margin-bottom: 12px; position: relative; z-index: 1;
     }
     .step-desc {
-      font-weight: 300; font-size: 14.5px;
+      font-weight: 300; font-size: 15px;
       line-height: 1.8; color: var(--off);
       position: relative; z-index: 1;
     }
@@ -274,13 +252,13 @@
     .pq-card.yes { background: var(--bg2); }
     .pq-card.no  { background: var(--surface); }
     .pq-title {
-      font-weight: 800; font-size: 22px;
-      letter-spacing: -.02em; margin-bottom: 40px;
-      display: flex; align-items: center; justify-content: center; gap: 14px;
+      font-weight: 800; font-size: 20px;
+      letter-spacing: -.02em; margin-bottom: 36px;
+      display: flex; align-items: center; justify-content: center; gap: 12px;
     }
     .pq-card.yes .pq-title { color: var(--terra); }
     .pq-card.no  .pq-title { color: var(--off); }
-    .pq-list { list-style: none; display: flex; flex-direction: column; gap: 18px; max-width: 420px; margin: 0 auto; }
+    .pq-list { list-style: none; display: flex; flex-direction: column; gap: 16px; max-width: 420px; margin: 0 auto; }
     .pq-list li {
       font-weight: 300; font-size: 16px;
       line-height: 1.65; color: var(--off);
@@ -291,8 +269,8 @@
     .pq-list li::before { content: '·'; color: var(--muted); flex-shrink: 0; }
     .pq-card.yes .pq-list li::before { content: '✦'; color: var(--terra); }
     .pq-note {
-      font-weight: 300; font-size: 13.5px;
-      letter-spacing: .06em; color: var(--off);
+      font-weight: 300; font-size: 14px;
+      letter-spacing: .04em; color: var(--off);
       margin-top: 32px; padding-top: 24px;
       border-top: 1px solid var(--border);
       text-align: center;
@@ -315,7 +293,7 @@
     }
     .cta-h em { font-weight: 300; font-style: italic; color: var(--terra); }
     .cta-p {
-      font-weight: 300; font-size: 17px;
+      font-weight: 300; font-size: clamp(15px, 1.4vw, 18px);
       line-height: 1.8; color: var(--off);
       max-width: 400px; margin: 0 auto 40px;
     }
@@ -326,9 +304,9 @@
       max-width: 420px; margin: 0 auto;
     }
     .cta-box p {
-      font-weight: 300; font-size: 14px;
-      letter-spacing: .03em; color: var(--off);
-      line-height: 1.65;
+      font-weight: 300; font-size: 15px;
+      letter-spacing: .01em; color: var(--off);
+      line-height: 1.7;
     }
     .cta-box strong {
       color: var(--white); font-weight: 700;
@@ -353,21 +331,21 @@
     }
     .form-sub {
       font-weight: 400; font-size: 11px;
-      letter-spacing: .12em; text-transform: uppercase;
+      letter-spacing: .14em; text-transform: uppercase;
       color: var(--off);
     }
     .fg { margin-bottom: 20px; }
     .fl {
       display: block; font-weight: 700; font-size: 10px;
-      letter-spacing: .3em; text-transform: uppercase;
+      letter-spacing: .28em; text-transform: uppercase;
       color: var(--off); margin-bottom: 10px;
     }
     .fi, .fs, .fta {
       width: 100%; background: var(--bg);
       border: 1px solid var(--border);
       color: var(--white); font-family: 'Raleway', sans-serif;
-      font-weight: 300; font-size: 15px;
-      padding: 14px 18px; outline: none;
+      font-weight: 300; font-size: 16px;
+      padding: 15px 18px; outline: none;
       transition: border-color .25s; -webkit-appearance: none;
     }
     .fi::placeholder, .fta::placeholder { color: #7a7a7a; }
@@ -383,14 +361,14 @@
       width: 100%; background: transparent;
       color: var(--terra); border: 1px solid var(--terra);
       font-family: 'Raleway', sans-serif; font-weight: 700;
-      font-size: 9px; letter-spacing: .35em; text-transform: uppercase;
+      font-size: 10px; letter-spacing: .32em; text-transform: uppercase;
       padding: 20px; cursor: pointer;
       transition: background .25s, color .25s; margin-top: 8px;
     }
     .f-btn:hover { background: var(--terra); color: var(--bg); }
     .f-note {
       font-weight: 400; font-size: 12px;
-      letter-spacing: .08em; color: var(--off);
+      letter-spacing: .06em; color: var(--off);
       text-align: center; margin-top: 16px;
     }
 
@@ -415,8 +393,8 @@
       padding-top: 40px;
     }
     .ft-copy {
-      font-weight: 400; font-size: 12px;
-      letter-spacing: .1em; color: var(--off);
+      font-weight: 400; font-size: 13px;
+      letter-spacing: .06em; color: var(--off);
       text-align: center; line-height: 1.8;
     }
 
@@ -449,22 +427,10 @@
 </head>
 <body>
 
-  <!-- NAV -->
-  <nav>
-    <a href="#" class="nav-logo">João Paulo da Silva</a>
-    <ul class="nav-links">
-      <li><a href="#sistema">Sistema</a></li>
-      <li><a href="#para-quem">Para quem</a></li>
-      <li><a href="#conversar">Conversar</a></li>
-    </ul>
-    <a href="#conversar" class="nav-cta">Quero conversar</a>
-  </nav>
-
   <!-- HERO -->
   <section class="hero">
     <div class="hero-bg" id="heroBg"></div>
     <div class="hero-content" id="heroContent">
-      <div class="hero-label" id="heroLabel">Estrategista de IA para Negócios</div>
       <h1 class="hero-h1">
         Seu negócio<br>
         depende de você<br>
@@ -645,14 +611,12 @@
     // ── Scroll-linked hero zoom ──
     const heroBg      = document.getElementById('heroBg');
     const heroContent = document.getElementById('heroContent');
-    const heroLabel   = document.getElementById('heroLabel');
 
     window.addEventListener('scroll', () => {
       const p = Math.min(window.scrollY / (window.innerHeight * 0.3), 1);
       heroBg.style.transform      = `scale(${1 + p * 0.27})`;
       heroContent.style.transform = `scale(${1 - p * 0.11})`;
       heroContent.style.opacity   = String(Math.max(0, 1 - p * 1.3));
-      heroLabel.style.opacity     = String(Math.max(0, 1 - p * 2.8));
     }, { passive: true });
 
     // ── Reveal on scroll ──
@@ -686,13 +650,13 @@
       }
 
       const msg =
-        'Oi João Paulo, quero conversar sobre o sistema.\n\n' +
+        'Oi JP, estou interessado em melhorar meu funil de vendas, meus dados são:\n\n' +
         'Nome: ' + nome + '\n' +
         'WhatsApp: ' + zap + '\n' +
         'Negócio: ' + negocio + '\n' +
         'Faturamento: ' + fat + '\n' +
         'Maior gargalo: ' + gargalo + '\n' +
-        (tentou ? 'Já tentou: ' + tentou : 'Já tentou: (não respondeu)');
+        (tentou ? 'Já tentou: ' + tentou : '');
 
       const url = 'https://wa.me/' + WHATS + '?text=' + encodeURIComponent(msg);
 
