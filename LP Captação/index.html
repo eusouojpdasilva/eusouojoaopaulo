@@ -1056,15 +1056,11 @@
       ].filter(Boolean).join("\n");
 
       const button = form.querySelector(".submit-button");
-      button.textContent = "Abrindo WhatsApp";
+      button.textContent = "Enviando…";
       button.disabled = true;
 
-      window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, "_blank");
-
-      setTimeout(() => {
-        button.textContent = "Continuar no WhatsApp";
-        button.disabled = false;
-      }, 2500);
+      const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+      window.location.href = `/obrigado.html?wa=${encodeURIComponent(waUrl)}`;
     });
   </script>
 </body>
