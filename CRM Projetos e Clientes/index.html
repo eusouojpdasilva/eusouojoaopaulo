@@ -1,0 +1,2032 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JP CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;500;600;700;800;900&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a0a;--bg2:#111111;--bg3:#181818;--bg4:#1e1e1e;--border:#222222;--border2:#2e2e2e;
+  --terra:#C26B3A;--terra15:rgba(194,107,58,0.15);--terra7:rgba(194,107,58,0.07);--terra30:rgba(194,107,58,0.3);
+  --text:#F0EDE8;--text2:#AAAAAA;--text3:#888888;--text4:#666666;
+  --green:#5DCAA5;--blue:#85B7EB;--red:#E24B4A;--amber:#EF9F27;
+}
+
+/* NOISE TEXTURE OVERLAY */
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");opacity:0.028;pointer-events:none;z-index:0}
+
+body{background:var(--bg);color:var(--text);font-family:'Raleway',sans-serif;font-size:14px;min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+
+/* TOPBAR */
+.topbar{
+  background:rgba(10,10,10,0.92);
+  border-bottom:1px solid var(--border);
+  padding:0 32px;
+  display:flex;align-items:center;justify-content:space-between;
+  height:60px;position:sticky;top:0;z-index:50;
+  backdrop-filter:blur(12px);
+}
+.topbar::after{
+  content:'';position:absolute;bottom:-1px;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--terra30) 30%,var(--terra30) 70%,transparent);
+}
+.logo{font-family:'Raleway',sans-serif;font-size:13px;font-weight:900;letter-spacing:4px;text-transform:uppercase;color:var(--text)}
+.logo span{color:var(--terra)}
+
+.tabs{display:flex;gap:2px}
+.tab{
+  padding:8px 20px;border-radius:0;border:none;background:transparent;
+  color:var(--text3);font-family:'Raleway',sans-serif;font-size:12px;font-weight:700;
+  letter-spacing:2.5px;text-transform:uppercase;cursor:pointer;
+  transition:all .25s ease;position:relative;
+}
+.tab::after{
+  content:'';position:absolute;bottom:-1px;left:50%;right:50%;height:1px;
+  background:var(--terra);transition:all .25s ease;
+}
+.tab.active{color:var(--text)}
+.tab.active::after{left:16px;right:16px}
+.tab:hover:not(.active){color:var(--text2)}
+
+.btn{
+  padding:8px 20px;border-radius:2px;
+  border:1px solid var(--terra);background:transparent;
+  color:var(--terra);font-family:'Raleway',sans-serif;
+  font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  cursor:pointer;transition:all .25s ease;
+}
+.btn:hover{background:var(--terra);color:#fff}
+.btn-ghost{border-color:var(--border2);background:transparent;color:var(--text3)}
+.btn-ghost:hover{border-color:var(--text3);background:transparent;color:var(--text2)}
+.btn-danger{border-color:var(--red);background:transparent;color:var(--red)}
+.btn-danger:hover{background:var(--red);color:#fff}
+
+/* FILTERS */
+.filters{
+  background:rgba(10,10,10,0.85);
+  border-bottom:1px solid var(--border);
+  padding:12px 32px;
+  display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+  position:sticky;top:60px;z-index:49;
+  backdrop-filter:blur(8px);
+}
+.filter-label{font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);margin-right:4px}
+.pill{
+  padding:5px 16px;border-radius:2px;
+  border:1px solid var(--border2);background:transparent;
+  color:var(--text2);font-family:'Raleway',sans-serif;
+  font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  cursor:pointer;transition:all .25s ease;
+}
+.pill:hover:not(.active){border-color:#666;color:var(--text)}
+.pill[data-proj="all"].active{border-color:var(--terra);color:var(--terra);background:var(--terra7)}
+.pill[data-proj="jp"].active{border-color:var(--terra);color:var(--terra);background:rgba(194,107,58,0.08)}
+.pill[data-proj="viaja"].active{border-color:var(--green);color:var(--green);background:rgba(93,202,165,0.08)}
+.pill[data-proj="nattiva"].active{border-color:var(--blue);color:var(--blue);background:rgba(133,183,235,0.08)}
+
+/* CONTENT */
+.content{padding:36px 32px;max-width:1440px;margin:0 auto;position:relative;z-index:1}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;margin-bottom:40px;border:1px solid var(--border);border-radius:4px;overflow:hidden;background:var(--border)}
+.stat{background:var(--bg2);padding:28px 24px;position:relative;transition:background .2s}
+.stat:hover{background:var(--bg3)}
+.stat-label{font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);margin-bottom:14px;display:block}
+.stat-value{font-size:36px;font-weight:900;line-height:1;letter-spacing:-1px;color:var(--text)}
+.stat-value.accent{color:var(--terra)}
+.stat:first-child::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--terra);opacity:0.6}
+
+/* SECTION HEADER */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+.section-title{
+  font-size:13px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:var(--text2);
+  display:flex;align-items:center;gap:12px;
+}
+.section-title::before{content:'';display:inline-block;width:20px;height:1px;background:var(--terra);opacity:0.8;flex-shrink:0}
+
+/* KANBAN */
+.kanban{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;align-items:start}
+.col{
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:4px;padding:16px;min-height:240px;
+}
+.col-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border);
+}
+.col-title{font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase}
+.col-count{
+  font-size:12px;font-weight:800;
+  background:var(--bg4);padding:2px 9px;border-radius:2px;color:var(--text2);
+  letter-spacing:1px;
+}
+
+/* Column status accents — Pipeline */
+.st-novo{border-top:2px solid var(--text4)}
+.st-contato{border-top:2px solid var(--blue)}
+.st-proposta{border-top:2px solid var(--terra)}
+.st-fechado{border-top:2px solid var(--green)}
+.st-perdido{border-top:2px solid var(--red)}
+.st-novo .col-title{color:var(--text3)}
+.st-contato .col-title{color:var(--blue)}
+.st-proposta .col-title{color:var(--terra)}
+.st-fechado .col-title{color:var(--green)}
+.st-perdido .col-title{color:var(--red)}
+
+/* Kanban card border-left — Pipeline */
+.st-novo .card{border-left:2px solid var(--border2)}
+.st-contato .card{border-left:2px solid rgba(133,183,235,0.4)}
+.st-proposta .card{border-left:2px solid rgba(194,107,58,0.5)}
+.st-fechado .card{border-left:2px solid rgba(93,202,165,0.5)}
+.st-perdido .card{border-left:2px solid rgba(226,75,74,0.3)}
+
+/* Column status accents — Tarefas */
+.ts-a-fazer{border-top:2px solid var(--text4)}
+.ts-andamento{border-top:2px solid var(--blue)}
+.ts-revisao{border-top:2px solid var(--amber)}
+.ts-concluido{border-top:2px solid var(--green)}
+.ts-a-fazer .col-title{color:var(--text3)}
+.ts-andamento .col-title{color:var(--blue)}
+.ts-revisao .col-title{color:var(--amber)}
+.ts-concluido .col-title{color:var(--green)}
+
+/* Kanban card border-left — Tarefas */
+.ts-a-fazer .card{border-left:2px solid var(--border2)}
+.ts-andamento .card{border-left:2px solid rgba(133,183,235,0.4)}
+.ts-revisao .card{border-left:2px solid rgba(239,159,39,0.4)}
+.ts-concluido .card{border-left:2px solid rgba(93,202,165,0.5)}
+
+/* Checklist item no card */
+.ckl-item{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);cursor:pointer}
+.ckl-item:last-child{border-bottom:none}
+.ckl-cb{width:16px;height:16px;border-radius:3px;border:1px solid var(--border2);background:transparent;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.ckl-cb.done{background:var(--terra);border-color:var(--terra)}
+.ckl-text{font-size:12px;color:var(--text);line-height:1.3}
+.ckl-text.done{color:var(--text3);text-decoration:line-through}
+
+.card{
+  background:var(--bg3);
+  border:1px solid var(--border);
+  border-radius:3px;padding:14px;
+  margin-bottom:8px;cursor:pointer;
+  transition:all .22s ease;
+}
+.card:hover{
+  border-color:var(--border2);
+  transform:translateY(-3px);
+  box-shadow:0 8px 24px rgba(0,0,0,0.5);
+  background:var(--bg4);
+}
+.card-proj{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+.card-name{font-size:13px;font-weight:800;margin-bottom:3px;color:var(--text);line-height:1.2}
+.card-nicho{font-size:13px;color:var(--text3);margin-bottom:10px;font-weight:500}
+.card-footer{display:flex;align-items:center;justify-content:space-between}
+.card-value{font-size:13px;font-weight:800;color:var(--terra);letter-spacing:-0.3px}
+.card-date{font-size:13px;color:var(--text3);letter-spacing:1px;text-transform:uppercase}
+.card-followup{
+  font-size:13px;color:var(--amber);font-weight:700;
+  padding:3px 7px;border-radius:2px;
+  background:rgba(239,159,39,0.08);letter-spacing:0.5px;
+  border:1px solid rgba(239,159,39,0.15);
+}
+.empty-col{color:var(--text4);font-size:12px;text-align:center;padding:28px 0;letter-spacing:2px;text-transform:uppercase}
+
+/* BADGES */
+.badge{display:inline-block;font-size:12px;font-weight:800;letter-spacing:2px;text-transform:uppercase;padding:3px 9px;border-radius:2px}
+.badge-jp{color:#E8845A;background:rgba(194,107,58,0.18);border:1px solid rgba(194,107,58,0.35)}
+.badge-viaja{color:#4DD9A8;background:rgba(93,202,165,0.15);border:1px solid rgba(93,202,165,0.3)}
+.badge-nattiva{color:#7EC8F5;background:rgba(133,183,235,0.15);border:1px solid rgba(133,183,235,0.3)}
+
+/* CLIENTS */
+.clients-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.client-card{
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:4px;overflow:hidden;
+  transition:border-color .22s ease;
+}
+.client-card:hover{border-color:var(--border2)}
+.client-header{
+  padding:20px 22px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:16px;
+}
+.avatar{
+  width:44px;height:44px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:900;flex-shrink:0;
+  border:1px solid rgba(255,255,255,0.08);
+}
+.client-name{font-size:15px;font-weight:800;margin-bottom:5px;color:var(--text);letter-spacing:-0.2px}
+.client-sub{font-size:12px;color:var(--text2);display:flex;align-items:center;gap:8px}
+.client-body{padding:18px 22px;font-size:12px;color:var(--text3);line-height:1.7}
+.client-body strong{color:var(--text);font-weight:700}
+.tasks-header{font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);margin-bottom:12px}
+.task-item{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+.task-item:last-child{border-bottom:none}
+.task-cb{
+  width:17px;height:17px;border-radius:2px;
+  border:1px solid var(--border2);background:transparent;
+  cursor:pointer;flex-shrink:0;margin-top:1px;
+  display:flex;align-items:center;justify-content:center;transition:all .2s;
+}
+.task-cb.done{background:var(--terra);border-color:var(--terra)}
+.task-cb.done::after{content:'✓';color:#fff;font-size:12px;font-weight:800}
+.task-text{font-size:12px;font-weight:500;color:var(--text);line-height:1.4}
+.task-text.done{color:var(--text3);text-decoration:line-through}
+.task-due{font-size:12px;color:var(--text2);margin-top:2px}
+.task-due.overdue{color:var(--red)}
+.task-due.soon{color:var(--amber)}
+.add-task-row{
+  width:100%;padding:8px;border:1px dashed var(--border2);background:transparent;
+  color:var(--text4);font-family:'Raleway',sans-serif;
+  font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  cursor:pointer;border-radius:2px;transition:all .22s;margin-top:10px;
+}
+.add-task-row:hover{border-color:var(--terra);color:var(--terra);background:var(--terra7)}
+
+/* FINANCEIRO TABLES */
+table thead tr th{
+  font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;
+  color:var(--text2);padding:10px 10px !important;
+  border-bottom:1px solid var(--border);
+}
+table tbody tr{transition:background .15s}
+table tbody tr:nth-child(even){background:rgba(255,255,255,0.02)}
+table tbody tr:hover{background:rgba(194,107,58,0.06)}
+table tbody tr td{padding:10px 10px !important;border-bottom:1px solid var(--border);font-size:12px;color:var(--text)}
+table tbody tr:last-child td{border-bottom:none}
+
+/* MODAL */
+.modal-overlay{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,0.82);
+  display:flex;align-items:center;justify-content:center;
+  z-index:200;backdrop-filter:blur(6px);
+}
+.modal{
+  background:var(--bg2);
+  border:1px solid var(--border2);
+  border-radius:4px;padding:32px;
+  width:480px;max-width:95vw;max-height:90vh;overflow-y:auto;
+  border-top:2px solid var(--terra);
+}
+.modal-divider{width:40px;height:2px;background:var(--terra);margin-bottom:20px}
+.modal-title{
+  font-family:'DM Serif Display',serif;
+  font-size:22px;font-weight:400;
+  color:var(--text);margin-bottom:28px;
+  font-style:italic;line-height:1.2;
+}
+.form-row{margin-bottom:18px}
+.form-label{
+  font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;
+  color:var(--text2);margin-bottom:8px;display:block;
+}
+.form-input{
+  width:100%;padding:10px 14px;
+  background:var(--bg3);
+  border:1px solid var(--border);
+  border-radius:2px;color:var(--text);
+  font-family:'Raleway',sans-serif;font-size:13px;
+  outline:none;transition:border .2s;
+}
+.form-input:focus{border-color:var(--terra);background:var(--bg4)}
+select.form-input option{background:var(--bg3);color:var(--text)}
+textarea.form-input{resize:vertical;min-height:80px}
+.form-actions{
+  display:flex;gap:8px;justify-content:flex-end;
+  margin-top:28px;padding-top:18px;border-top:1px solid var(--border);
+}
+
+/* EMPTY */
+.empty-state{text-align:center;padding:72px 20px;color:var(--text4)}
+.empty-icon{font-size:28px;margin-bottom:14px;opacity:0.4}
+.empty-text{font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text4)}
+
+/* DELETE AREA */
+.client-actions{display:flex;justify-content:flex-end;padding:0 22px 16px}
+
+/* FINANCEIRO META BOX */
+.meta-box{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:4px;padding:20px 22px;margin-bottom:12px;
+  display:flex;align-items:center;gap:24px;
+}
+.meta-box > div{font-size:13px;color:var(--text2)}
+.meta-box strong{color:var(--text);font-size:15px;font-weight:800}
+
+@media(max-width:900px){
+  .kanban{grid-template-columns:1fr 1fr}
+  .stats{grid-template-columns:1fr 1fr}
+  .clients-grid{grid-template-columns:1fr}
+}
+@media(max-width:600px){
+  .kanban{grid-template-columns:1fr}
+  .stats{grid-template-columns:1fr 1fr}
+  .topbar{padding:0 18px}
+  .content{padding:20px 18px}
+  .filters{padding:10px 18px}
+}
+
+/* LOGIN */
+#login-screen{
+  position:fixed;inset:0;z-index:999;
+  background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+}
+#login-screen.hidden{display:none}
+.login-card{
+  width:360px;max-width:90vw;
+  text-align:center;
+}
+.login-logo{
+  font-family:'Raleway',sans-serif;
+  font-size:18px;font-weight:900;letter-spacing:5px;text-transform:uppercase;
+  color:var(--text);margin-bottom:48px;
+}
+.login-logo span{color:var(--terra)}
+.login-divider{
+  width:32px;height:2px;background:var(--terra);
+  margin:0 auto 24px;
+}
+.login-title{
+  font-family:'DM Serif Display',serif;
+  font-size:28px;font-style:italic;
+  color:var(--text);margin-bottom:8px;line-height:1.2;
+}
+.login-sub{
+  font-size:13px;font-weight:600;letter-spacing:2px;
+  text-transform:uppercase;color:var(--text3);margin-bottom:36px;
+}
+.login-input-wrap{position:relative;margin-bottom:12px}
+.login-input{
+  width:100%;padding:14px 18px;
+  background:var(--bg2);border:1px solid var(--border2);
+  border-radius:4px;color:var(--text);
+  font-family:'Raleway',sans-serif;font-size:18px;font-weight:700;
+  text-align:center;letter-spacing:8px;outline:none;
+  transition:border .2s;
+}
+.login-input:focus{border-color:var(--terra)}
+.login-input::placeholder{letter-spacing:2px;font-size:13px;font-weight:400;color:var(--text3)}
+.login-btn{
+  width:100%;padding:13px;border-radius:4px;
+  border:1px solid var(--terra);background:var(--terra15);
+  color:var(--terra);font-family:'Raleway',sans-serif;
+  font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;
+  cursor:pointer;transition:all .25s ease;
+}
+.login-btn:hover{background:var(--terra);color:#fff}
+.login-error{
+  font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  color:var(--red);margin-top:12px;min-height:18px;transition:opacity .2s;
+}
+@keyframes shake{
+  0%,100%{transform:translateX(0)}
+  20%{transform:translateX(-8px)}
+  40%{transform:translateX(8px)}
+  60%{transform:translateX(-6px)}
+  80%{transform:translateX(6px)}
+}
+.shake{animation:shake .4s ease}
+</style>
+</head>
+<body>
+
+<!-- TELA DE LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">JP <span>CRM</span></div>
+    <div class="login-divider"></div>
+    <div class="login-title">Bem-vindo de volta</div>
+    <div class="login-sub">Digite sua senha para acessar</div>
+    <div class="login-input-wrap">
+      <input class="login-input" id="login-senha" type="password" placeholder="senha" maxlength="20"
+        onkeydown="if(event.key==='Enter')tentarLogin()">
+    </div>
+    <button class="login-btn" onclick="tentarLogin()">Acessar o CRM</button>
+    <div class="login-error" id="login-erro"></div>
+  </div>
+</div>
+
+<!-- CRM (oculto até login) -->
+<div id="crm-app" style="display:none">
+
+<div class="topbar">
+  <div class="logo">JP <span>CRM</span></div>
+  <div class="tabs">
+    <button class="tab" id="tab-dashboard" onclick="switchTab('dashboard')">Dashboard</button>
+    <button class="tab active" id="tab-pipeline" onclick="switchTab('pipeline')">Pipeline</button>
+    <button class="tab" id="tab-clientes" onclick="switchTab('clientes')">Clientes</button>
+    <button class="tab" id="tab-tarefas" onclick="switchTab('tarefas')">Tarefas</button>
+    <button class="tab" id="tab-financeiro" onclick="switchTab('financeiro')">Financeiro</button>
+  </div>
+  <button class="btn" id="main-btn" onclick="handleMainBtn()">+ Novo Lead</button>
+</div>
+
+<div class="filters">
+  <span class="filter-label">Projeto</span>
+  <button class="pill active" data-proj="all" onclick="setFilter(this,'all')">Todos</button>
+  <button class="pill" data-proj="jp" onclick="setFilter(this,'jp')">Eu Sou o JP</button>
+  <button class="pill" data-proj="viaja" onclick="setFilter(this,'viaja')">JP Viaja</button>
+  <button class="pill" data-proj="nattiva" onclick="setFilter(this,'nattiva')">Nattiva Travel</button>
+  <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+    <label class="filter-label">Moeda</label>
+    <select class="form-input" id="sel-currency" style="width:110px;padding:6px 8px;border-radius:6px;font-size:12px" onchange="setCurrency(this.value)">
+      <option value="BRL">BRL</option>
+      <option value="USD">USD</option>
+      <option value="EUR">EUR</option>
+    </select>
+    <label class="filter-label">Meta Mensal</label>
+    <input id="meta-input" class="form-input" style="width:140px;padding:6px 8px;border-radius:6px;font-size:12px" placeholder="0" onblur="saveMeta()" onkeydown="if(event.key==='Enter'){saveMeta();this.blur()}" />
+    <button class="btn" style="padding:6px 12px;font-size:12px" onclick="saveMeta()">OK</button>
+  </div>
+</div>
+
+<div class="content" id="main-content"></div>
+<div id="modal-root"></div>
+</div><!-- /crm-app -->
+
+<script>
+// ════════════════════════════════════════════════════════════════════════════
+// LOGIN
+// ════════════════════════════════════════════════════════════════════════════
+const SENHA_CRM = '1949';
+const SESSION_KEY = 'jp_crm_auth';
+
+function verificarSessao(){
+  if(sessionStorage.getItem(SESSION_KEY)==='ok'){
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('crm-app').style.display='block';
+    // Chama initData depois do script carregar
+    setTimeout(()=>initData(), 0);
+    return true;
+  }
+  // foca no campo de senha
+  setTimeout(()=>{ const el=document.getElementById('login-senha'); if(el) el.focus(); },100);
+  return false;
+}
+
+function tentarLogin(){
+  const input=document.getElementById('login-senha');
+  const erro=document.getElementById('login-erro');
+  if(!input) return;
+  if(input.value===SENHA_CRM){
+    sessionStorage.setItem(SESSION_KEY,'ok');
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('crm-app').style.display='block';
+    initData();
+  } else {
+    input.value='';
+    erro.textContent='Senha incorreta';
+    const wrap=input.closest('.login-input-wrap')||input;
+    wrap.classList.add('shake');
+    setTimeout(()=>{ wrap.classList.remove('shake'); erro.textContent=''; },2000);
+    input.focus();
+  }
+}
+
+// Verifica sessão ao carregar — se já logado inicia o CRM direto
+const _jaLogado = verificarSessao();
+// initData() será chamado aqui (sessão ativa) ou pelo tentarLogin (novo login)
+
+// ════════════════════════════════════════════════════════════════════════════
+// JP CRM — SUPABASE LIVE
+// ════════════════════════════════════════════════════════════════════════════
+
+// ─── SUPABASE CLIENT ──────────────────────────────────────────────────────────
+const SUPABASE_URL = 'https://swiszowpfurkegrnbwfj.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN3aXN6b3dwZnVya2Vncm5id2ZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNjI4MjksImV4cCI6MjA5NTczODgyOX0.gRroKE-86kI5O_8cMwtg8-l2qqWWQisxwk6GYlvz0es';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ─── CONSTANTS ────────────────────────────────────────────────────────────────
+const PROJ = {jp:'Eu Sou o JP', viaja:'JP Viaja', nattiva:'Nattiva Travel'};
+const BADGE = {jp:'badge-jp', viaja:'badge-viaja', nattiva:'badge-nattiva'};
+const AV_BG = {jp:'rgba(194,107,58,0.2)', viaja:'rgba(93,202,165,0.18)', nattiva:'rgba(133,183,235,0.18)'};
+const AV_COLOR = {jp:'#C26B3A', viaja:'#5DCAA5', nattiva:'#85B7EB'};
+const STATUSES = ['novo','contato','proposta','fechado','perdido'];
+const ST_LABEL = {novo:'Novo',contato:'Em Contato',proposta:'Proposta',fechado:'Fechado',perdido:'Perdido'};
+const TASK_STATUSES = ['a-fazer','andamento','revisao','concluido'];
+const TASK_LABEL = {'a-fazer':'A Fazer','andamento':'Em Andamento','revisao':'Em Revisão','concluido':'Concluído'};
+const TASK_COR   = {'a-fazer':'var(--text3)','andamento':'var(--blue)','revisao':'var(--amber)','concluido':'var(--green)'};
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let tab = 'pipeline';
+let projFilter = 'all';
+
+// ─── META LOCAL (sem tabela no Supabase) ─────────────────────────────────────
+const META_KEY = 'jp_crm_meta';
+function loadMeta(){ try{ return JSON.parse(localStorage.getItem(META_KEY))||{metaMensal:0,currency:'BRL'}; }catch(e){ return {metaMensal:0,currency:'BRL'}; } }
+function persistMeta(){ localStorage.setItem(META_KEY, JSON.stringify({metaMensal:data.metaMensal,currency:data.currency})); }
+
+// ─── CACHE LOCAL (runtime) ────────────────────────────────────────────────────
+const _meta = loadMeta();
+let data = { leads:[], clientes:[], contratos:[], faturas:[], despesas:[], tarefas:[], metaMensal:_meta.metaMensal, currency:_meta.currency };
+
+// ─── FIELD MAPPING (DB snake_case → JS camelCase) ─────────────────────────────
+const mapLead    = r => ({id:r.id, nome:r.nome, nicho:r.nicho, proj:r.proj, status:r.status, valorEstimado:r.valor_estimado?String(r.valor_estimado):'', moeda:r.moeda||'BRL', tipo:r.tipo, followup:r.followup, obs:r.obs, contatoData:r.contato_data, clienteId:r.cliente_id, createdAt:r.created_at});
+const mapTarefa  = r => ({id:r.id, clienteId:r.cliente_id, titulo:r.titulo, obs:r.obs||'', status:r.status||'a-fazer', dataInicio:r.data_inicio||'', dataEntrega:r.data_entrega||'', checklist:r.checklist||[], createdAt:r.created_at});
+const mapCliente = r => ({id:r.id, nome:r.nome, empresa:r.empresa, instagram:r.instagram, proj:r.proj, status:r.status, comoConheceu:r.como_conheceu, observacao:r.observacao, leadId:r.lead_id, av:r.av, createdAt:r.created_at, cidade:r.cidade||'', estado:r.estado||'', pais:r.pais||'Brasil'});
+const mapContrato= r => ({id:r.id, clienteId:r.cliente_id, valor:r.valor, recorrencia:r.recorrencia, dataInicio:r.data_inicio, vencimento:r.vencimento, status:r.status, moeda:r.moeda, diaVencimento:r.dia_vencimento||null, numParcelas:r.num_parcelas||null});
+const mapFatura  = r => ({id:r.id, clienteId:r.cliente_id, contratoId:r.contrato_id, mes:r.mes, valor:r.valor, status:r.status, dataPagamento:r.data_pagamento});
+const mapDespesa = r => ({id:r.id, item:r.item, valor:r.valor, periodo:r.periodo, categoria:r.categoria, data:r.data, dataFim:r.data_fim||null});
+
+// ─── TOAST ────────────────────────────────────────────────────────────────────
+function toast(msg, type='error'){
+  const el=document.createElement('div');
+  el.style.cssText=`position:fixed;bottom:24px;right:24px;z-index:9999;background:${type==='error'?'var(--red)':'var(--green)'};color:#fff;padding:12px 20px;border-radius:4px;font-size:12px;font-weight:700;letter-spacing:1px;box-shadow:0 4px 20px rgba(0,0,0,0.4);transition:opacity .3s`;
+  el.textContent=msg;
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(),3500);
+}
+
+// ─── LOADING ──────────────────────────────────────────────────────────────────
+function showLoading(){
+  document.getElementById('main-content').innerHTML=`<div style="text-align:center;padding:100px 0"><div style="font-size:12px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:var(--text3)">Carregando...</div></div>`;
+}
+
+// ─── INIT — carrega tudo do Supabase ─────────────────────────────────────────
+async function initData(){
+  showLoading();
+  try{
+    const [l,c,ct,f,d,tr] = await Promise.all([
+      sb.from('leads').select('*').order('created_at',{ascending:false}),
+      sb.from('clientes').select('*').order('created_at',{ascending:false}),
+      sb.from('contratos').select('*').order('created_at',{ascending:false}),
+      sb.from('faturas').select('*'),
+      sb.from('despesas').select('*').order('data',{ascending:false}),
+      sb.from('tarefas').select('*').order('created_at',{ascending:false}),
+    ]);
+    if(l.error) throw l.error;
+    if(c.error) throw c.error;
+    data.leads    = (l.data||[]).map(mapLead);
+    data.clientes = (c.data||[]).map(mapCliente);
+    data.contratos= (ct.data||[]).map(mapContrato);
+    data.faturas  = (f.data||[]).map(mapFatura);
+    data.despesas = (d.data||[]).map(mapDespesa);
+    data.tarefas  = (tr.data||[]).map(mapTarefa);
+    render();
+  }catch(e){
+    document.getElementById('main-content').innerHTML=`<div style="text-align:center;padding:100px 0"><div style="color:var(--red);font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase">Erro ao conectar com Supabase</div><div style="color:var(--text3);font-size:13px;margin-top:10px">${e.message}</div><button class="btn" style="margin-top:20px" onclick="initData()">Tentar novamente</button></div>`;
+  }
+}
+
+// ─── HELPERS GLOBAIS ──────────────────────────────────────────────────────────
+function val(id){ const el=document.getElementById(id); return el?el.value.trim():''; }
+function modal(inner){ document.getElementById('modal-root').innerHTML=`<div class="modal-overlay" id="moverlay" onclick="if(event.target.id==='moverlay')closeModal()">${inner}</div>`; }
+function closeModal(){ document.getElementById('modal-root').innerHTML=''; }
+function getContratoAtivo(clienteId){ return (data.contratos||[]).find(ct=>ct.clienteId===clienteId&&ct.status==='Ativo'); }
+
+// Retorna o select de dia do vencimento (1-31)
+function selectDiaVencimento(selected){
+  const opts = `<option value="">Sem dia fixo</option>`+
+    Array.from({length:31},(_,i)=>i+1).map(d=>`<option value="${d}" ${selected==d?'selected':''}>Dia ${String(d).padStart(2,'0')}</option>`).join('');
+  return `<select class="form-input" id="ct_dia_venc">${opts}</select>`;
+}
+
+// Calcula a data de vencimento do pagamento num dado mês ('YYYY-MM') e diaVencimento
+function datVencPagamento(mes, diaVenc){
+  if(!diaVenc) return null;
+  const [y,m] = mes.split('-').map(Number);
+  // Ajusta para último dia do mês se dia > dias no mês (ex: dia 31 em fevereiro)
+  const ultimoDia = new Date(y, m, 0).getDate();
+  const dia = Math.min(diaVenc, ultimoDia);
+  return `${mes}-${String(dia).padStart(2,'0')}`;
+}
+
+// Status efetivo de uma cobrança no mês (considera vencimento automático sem escrever no DB)
+function statusEfetivo(clienteId, mes){
+  const fat = getFatura(clienteId, mes);
+  if(fat) return fat.status; // status explícito salvo pelo usuário
+  const ct = getContratoAtivo(clienteId);
+  if(!ct || !ct.diaVencimento) return 'pendente';
+  const dataVenc = datVencPagamento(mes, ct.diaVencimento);
+  if(!dataVenc) return 'pendente';
+  const hoje = new Date().toISOString().slice(0,10);
+  return dataVenc < hoje ? 'vencido-auto' : 'pendente'; // vencido-auto = vencido sem registro no DB
+}
+
+// Determina se um contrato gera cobrança no mês 'YYYY-MM' informado
+// Regras:
+//   Mensal       → todo mês dentro do período do contrato
+//   Trimestral   → a cada 3 meses a partir de dataInicio
+//   Anual        → 1× por ano no mês de dataInicio
+//   Pagamento Único → SOMENTE no mês de dataInicio
+function isCobravel(ct, mes){
+  if(!ct || ct.status !== 'Ativo') return false;
+  const rec = (ct.recorrencia||'').toLowerCase();
+  const inicio = ct.dataInicio ? ct.dataInicio.slice(0,7) : null; // 'YYYY-MM'
+  const fim    = ct.vencimento ? ct.vencimento.slice(0,7) : null;
+
+  // Fora do período do contrato → não cobra
+  if(inicio && mes < inicio) return false;
+  if(fim    && mes > fim)    return false;
+
+  if(rec.includes('único') || rec.includes('unico') || rec === 'pagamento único'){
+    return mes === inicio;
+  }
+  if(rec.includes('parcelado') || rec.includes('mensal')) return true;
+  if(rec.includes('trimestral')){
+    if(!inicio) return true;
+    const [iy,im] = inicio.split('-').map(Number);
+    const [cy,cm] = mes.split('-').map(Number);
+    const diff = (cy - iy)*12 + (cm - im);
+    return diff >= 0 && diff % 3 === 0;
+  }
+  if(rec.includes('anual')){
+    if(!inicio) return true;
+    const im = parseInt(inicio.split('-')[1]);
+    const cm = parseInt(mes.split('-')[1]);
+    return im === cm;
+  }
+  return true; // fallback
+}
+function setCurrency(c){ data.currency=c; persistMeta(); render(); }
+function saveMeta(){ const el=document.getElementById('meta-input'); if(!el) return; data.metaMensal=parseFloat(el.value.replace(',','.'))||0; persistMeta(); render(); }
+function formatCurrency(v){ if(!v&&v!==0) return '—'; return new Intl.NumberFormat(data.currency==='BRL'?'pt-BR':'en-US',{style:'currency',currency:data.currency||'BRL'}).format(v); }
+
+// ─── ROTEAMENTO ───────────────────────────────────────────────────────────────
+function switchTab(t){
+  tab=t;
+  ['dashboard','pipeline','clientes','tarefas','financeiro'].forEach(x=>document.getElementById('tab-'+x).classList.toggle('active',t===x));
+  const btns={dashboard:'',pipeline:'+ Novo Lead',clientes:'+ Novo Cliente',tarefas:'+ Nova Tarefa',financeiro:'+ Nova Despesa'};
+  const btn=document.getElementById('main-btn');
+  btn.textContent=btns[t]||'';
+  btn.style.visibility=t==='dashboard'?'hidden':'visible';
+  render();
+}
+function handleMainBtn(){
+  if(tab==='pipeline') openLeadForm(null);
+  else if(tab==='clientes') openClienteForm();
+  else if(tab==='tarefas') openTarefaForm(null);
+  else if(tab==='financeiro') openExpenseForm();
+}
+function setFilter(el,proj){
+  projFilter=proj;
+  document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active'); render();
+}
+function filtered(arr){ return projFilter==='all'?arr:arr.filter(x=>x.proj===projFilter); }
+function render(){
+  if(tab==='dashboard') renderDashboard();
+  else if(tab==='pipeline') renderPipeline();
+  else if(tab==='clientes') renderClientes();
+  else if(tab==='tarefas') renderTarefas();
+  else if(tab==='financeiro') renderFinanceiro();
+}
+
+// (helpers definidos acima)
+
+// ─── DASHBOARD ────────────────────────────────────────────────────────────────
+function renderDashboard(){
+  const hoje = new Date().toISOString().slice(0,10);
+  const mesAtual = hoje.slice(0,7);
+  const leads = filtered(data.leads);
+  const clientes = filtered(data.clientes);
+
+  // ── KPIs ──
+  const leadsAtivos = leads.filter(l=>l.status!=='perdido');
+  const emProposta  = leads.filter(l=>l.status==='proposta');
+  const clientesAtivos = clientes.filter(c=>!isClienteVencido(c));
+  const cliCobraveisMes = clientes.filter(c=>{
+    if((c.status||'').toLowerCase()!=='ativo') return false;
+    const ct=getContratoAtivo(c.id);
+    return ct && isCobravel(ct, mesAtual);
+  });
+  const recebidoMes = cliCobraveisMes
+    .filter(c=>statusEfetivo(c.id,mesAtual)==='pago')
+    .reduce((s,c)=>s+((getContratoAtivo(c.id)||{}).valor||0),0);
+
+  // ── FUNIL ──
+  const totalFunil = leadsAtivos.length || 1;
+  const funnelSteps = [
+    {label:'Novo',        key:'novo',     cor:'var(--text3)'},
+    {label:'Em Contato',  key:'contato',  cor:'var(--blue)'},
+    {label:'Proposta',    key:'proposta', cor:'var(--terra)'},
+    {label:'Fechado',     key:'fechado',  cor:'var(--green)'},
+  ];
+
+  // ── LEADS POR DIA DA SEMANA ──
+  const diasNomes = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+  const countByDay = [0,0,0,0,0,0,0];
+  leads.forEach(l=>{ if(l.createdAt){ countByDay[new Date(l.createdAt).getDay()]++; } });
+  const maxDay = Math.max(...countByDay)||1;
+
+  // ── SLA FOLLOW-UP ──
+  const leadsAbertos = leads.filter(l=>l.status!=='fechado'&&l.status!=='perdido');
+  const comFollowup  = leadsAbertos.filter(l=>l.followup);
+  const followupOk   = comFollowup.filter(l=>l.followup>=hoje);
+  const followupVenc = comFollowup.filter(l=>l.followup<hoje);
+  const semFollowup  = leadsAbertos.filter(l=>!l.followup);
+  const slaOkPct = leadsAbertos.length>0 ? Math.round((followupOk.length/leadsAbertos.length)*100) : 100;
+
+  // ── FILA DE RISCO ──
+  const filaRisco = leads
+    .filter(l=>(l.status==='novo'||l.status==='contato'||l.status==='proposta')&&l.followup&&l.followup<hoje)
+    .sort((a,b)=>a.followup.localeCompare(b.followup));
+
+  const secLabel = txt=>`<div style="font-size:13px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:var(--text2);padding-bottom:14px;border-bottom:1px solid var(--border);margin-bottom:20px;display:flex;align-items:center;gap:12px"><span style="width:20px;height:1px;background:var(--terra);display:inline-block;flex-shrink:0;opacity:.8"></span>${txt}</div>`;
+
+  let h = '';
+
+  // ── 1. KPIs ──
+  h+=`<div class="stats" style="margin-bottom:32px">
+    <div class="stat"><span class="stat-label">Leads Ativos</span><div class="stat-value">${leadsAtivos.length}</div></div>
+    <div class="stat"><span class="stat-label">Em Proposta</span><div class="stat-value accent">${emProposta.length}</div></div>
+    <div class="stat"><span class="stat-label">Clientes Ativos</span><div class="stat-value">${clientesAtivos.length}</div></div>
+    <div class="stat"><span class="stat-label">Receita do Mês</span><div class="stat-value accent">${formatCurrency(recebidoMes)}</div></div>
+  </div>`;
+
+  // ── 2+3. Funil + Gráfico por dia ──
+  h+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">`;
+
+  // FUNIL DE CONVERSÃO
+  h+=`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:24px">
+    ${secLabel('Funil de Conversão')}`;
+  funnelSteps.forEach(step=>{
+    const cnt=leads.filter(l=>l.status===step.key).length;
+    const pct=Math.round((cnt/totalFunil)*100);
+    h+=`<div style="margin-bottom:16px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px">
+        <span style="font-size:13px;font-weight:700;color:var(--text2)">${step.label}</span>
+        <div style="display:flex;align-items:baseline;gap:10px">
+          <span style="font-size:22px;font-weight:900;letter-spacing:-0.5px;color:${step.cor}">${cnt}</span>
+          <span style="font-size:12px;color:var(--text3);width:34px;text-align:right">${pct}%</span>
+        </div>
+      </div>
+      <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden">
+        <div style="height:100%;width:${Math.max(pct,2)}%;background:${step.cor};border-radius:2px"></div>
+      </div>
+    </div>`;
+  });
+  const perdidos=leads.filter(l=>l.status==='perdido').length;
+  h+=`<div style="margin-top:4px;padding-top:12px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+    <span style="font-size:12px;color:var(--text3)">Perdidos</span>
+    <span style="font-size:14px;font-weight:800;color:var(--red)">${perdidos}</span>
+  </div></div>`;
+
+  // LEADS POR DIA DA SEMANA
+  const diasOrder=[1,2,3,4,5,6,0];
+  h+=`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:24px">
+    ${secLabel('Leads por Dia da Semana')}
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;height:110px;gap:6px;margin-bottom:10px">`;
+  diasOrder.forEach(d=>{
+    const cnt=countByDay[d];
+    const hPct=Math.round((cnt/maxDay)*100);
+    h+=`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px">
+      <span style="font-size:12px;font-weight:800;color:${cnt>0?'var(--text2)':'transparent'}">${cnt}</span>
+      <div style="width:100%;background:var(--border);border-radius:2px 2px 0 0;height:72px;display:flex;align-items:flex-end">
+        <div style="width:100%;height:${Math.max(hPct,3)}%;background:${cnt>0?'var(--terra)':'var(--bg3)'};border-radius:2px 2px 0 0"></div>
+      </div>
+      <span style="font-size:13px;font-weight:700;letter-spacing:0.5px;color:var(--text3);text-transform:uppercase">${diasNomes[d]}</span>
+    </div>`;
+  });
+  h+=`</div>
+    <div style="font-size:12px;color:var(--text3)">${leads.length} lead${leads.length!==1?'s':''} cadastrado${leads.length!==1?'s':''} no filtro atual</div>
+  </div>`;
+
+  h+=`</div>`; // fim grid 2 cols
+
+  // ── 4+5. SLA Follow-up + Fila de Risco ──
+  h+=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">`;
+
+  // SLA FOLLOW-UP
+  h+=`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:24px">
+    ${secLabel('SLA de Follow-up')}
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:4px;overflow:hidden;margin-bottom:20px">
+      <div style="background:var(--bg3);padding:16px 12px;text-align:center">
+        <div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:8px">Em dia</div>
+        <div style="font-size:26px;font-weight:900;color:var(--green)">${followupOk.length}</div>
+      </div>
+      <div style="background:var(--bg3);padding:16px 12px;text-align:center">
+        <div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:8px">Vencido</div>
+        <div style="font-size:26px;font-weight:900;color:var(--red)">${followupVenc.length}</div>
+      </div>
+      <div style="background:var(--bg3);padding:16px 12px;text-align:center">
+        <div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:8px">Sem data</div>
+        <div style="font-size:26px;font-weight:900;color:var(--amber)">${semFollowup.length}</div>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <span style="font-size:12px;color:var(--text3)">Follow-ups em dia (leads abertos)</span>
+      <span style="font-size:14px;font-weight:900;color:${slaOkPct>=70?'var(--green)':'var(--red)'}">${slaOkPct}%</span>
+    </div>
+    <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden">
+      <div style="height:100%;width:${slaOkPct}%;background:${slaOkPct>=70?'var(--green)':'var(--red)'};border-radius:2px"></div>
+    </div>
+    ${leadsAbertos.length===0?`<div style="margin-top:14px;font-size:12px;color:var(--text3)">Nenhum lead aberto no momento.</div>`:''}
+  </div>`;
+
+  // FILA DE RISCO
+  h+=`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:24px">
+    ${secLabel('Fila de Risco — Sem Retorno')}`;
+  if(filaRisco.length===0){
+    h+=`<div style="text-align:center;padding:32px 0;color:var(--text4)">
+      <div style="font-size:22px;margin-bottom:10px;opacity:.4">✓</div>
+      <div style="font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase">Nenhum lead em risco</div>
+    </div>`;
+  } else {
+    h+=`<div style="display:flex;flex-direction:column;gap:8px">`;
+    filaRisco.slice(0,6).forEach(l=>{
+      const dias=Math.floor((new Date(hoje)-new Date(l.followup+'T00:00:00'))/86400000);
+      h+=`<div onclick="openLeadForm('${l.id}')" style="display:flex;align-items:center;justify-content:space-between;padding:10px 13px;background:var(--bg3);border:1px solid rgba(226,75,74,0.15);border-left:2px solid var(--red);border-radius:3px;cursor:pointer;transition:background .2s" onmouseover="this.style.background='var(--bg4)'" onmouseout="this.style.background='var(--bg3)'">
+        <div>
+          <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:2px">${l.nome}</div>
+          <div style="font-size:13px;color:var(--text3);text-transform:uppercase;letter-spacing:1px">${ST_LABEL[l.status]||l.status}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:12px;font-weight:900;color:var(--red)">+${dias}d</div>
+          <div style="font-size:13px;color:var(--text3)">${new Date(l.followup+'T00:00:00').toLocaleDateString('pt-BR')}</div>
+        </div>
+      </div>`;
+    });
+    if(filaRisco.length>6) h+=`<div style="text-align:center;font-size:12px;color:var(--text3);padding:6px">+${filaRisco.length-6} mais</div>`;
+    h+=`</div>`;
+  }
+  h+=`</div>`;
+
+  h+=`</div>`; // fim grid 2 cols
+
+  document.getElementById('main-content').innerHTML=h;
+}
+
+// ─── HELPERS DE FORMULÁRIO DE CONTRATO ───────────────────────────────────────
+window._chkRec = function(){
+  const v = document.getElementById('ct_recorrencia')?.value;
+  const s = document.getElementById('ct_parc_sect');
+  if(s) s.style.display = v==='Parcelado'?'block':'none';
+  window._calcParc();
+};
+window._calcParc = function(){
+  const total = parseFloat((document.getElementById('ct_total')?.value||'').replace(',','.')) || 0;
+  const n     = parseInt(document.getElementById('ct_num_parcelas')?.value) || 0;
+  const info  = document.getElementById('ct_parc_info');
+  const inicio = document.getElementById('ct_inicio')?.value;
+  if(total>0 && n>0){
+    const parc = total/n;
+    if(info) info.innerHTML = `<strong>${n}x de ${formatCurrency(parc)}</strong> = ${formatCurrency(total)} no total`;
+    const valorEl = document.getElementById('ct_valor');
+    if(valorEl) valorEl.value = parc.toFixed(2);
+    if(inicio){
+      const d = new Date(inicio+'T00:00:00');
+      d.setMonth(d.getMonth()+n-1);
+      const lastDay = new Date(d.getFullYear(),d.getMonth()+1,0).toISOString().slice(0,10);
+      const vencEl = document.getElementById('ct_vencimento');
+      if(vencEl) vencEl.value = lastDay;
+    }
+  } else if(info) info.innerHTML='';
+};
+
+function _parceladoSection(numParcelas, valor){
+  return `<div id="ct_parc_sect" style="display:none;margin-bottom:18px;padding:14px;background:var(--bg3);border:1px solid var(--border);border-radius:4px">
+    <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:12px">Configuração de Parcelas</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div><label class="form-label">Valor total do serviço</label>
+        <input class="form-input" id="ct_total" placeholder="0.00" oninput="window._calcParc()" value="${numParcelas&&valor?(numParcelas*valor).toFixed(2):''}">
+      </div>
+      <div><label class="form-label">Nº de parcelas</label>
+        <input class="form-input" id="ct_num_parcelas" type="number" min="2" max="60" placeholder="Ex: 3" oninput="window._calcParc()" value="${numParcelas||''}">
+      </div>
+    </div>
+    <div id="ct_parc_info" style="margin-top:8px;font-size:12px;color:var(--terra)"></div>
+  </div>`;
+}
+
+const RECORRENCIAS = ['Mensal','Trimestral','Anual','Pagamento Único','Parcelado'];
+function _recSelect(selected){
+  return `<select class="form-input" id="ct_recorrencia" onchange="window._chkRec()">${RECORRENCIAS.map(o=>`<option ${o===selected?'selected':''}>${o}</option>`).join('')}</select>`;
+}
+
+// ─── PIPELINE ─────────────────────────────────────────────────────────────────
+function renderPipeline(){
+  // SUPABASE: await supabase.from('leads').select('*').order('created_at',{ascending:false})
+  const leads=filtered(data.leads);
+  // Agrupa pipeline por moeda
+  const pipelineMap = {};
+  leads.forEach(l=>{
+    if(l.status==='perdido') return;
+    const n=parseFloat((l.valorEstimado||'').replace(/[^\d.,]/g,'').replace(',','.'));
+    if(isNaN(n)||n<=0) return;
+    const m=l.moeda||'BRL';
+    pipelineMap[m]=(pipelineMap[m]||0)+n;
+  });
+  const MOEDA_SYMBOL = {BRL:'R$', USD:'US$', EUR:'€'};
+  const pipelineHtml = Object.keys(pipelineMap).length===0 ? '—' :
+    Object.entries(pipelineMap).map(([m,v])=>{
+      const fmt = new Intl.NumberFormat(m==='BRL'?'pt-BR':'en-US',{minimumFractionDigits:2,maximumFractionDigits:2}).format(v);
+      return `<span style="display:inline-flex;align-items:baseline;gap:4px"><span style="font-size:13px;font-weight:600;opacity:.7">${MOEDA_SYMBOL[m]||m}</span>${fmt}</span>`;
+    }).join('<span style="font-size:20px;color:var(--text3);margin:0 6px">+</span>');
+  let h=`<div class="stats">
+    <div class="stat"><div class="stat-label">Total Leads</div><div class="stat-value">${leads.length}</div></div>
+    <div class="stat"><div class="stat-label">Em Proposta</div><div class="stat-value">${leads.filter(l=>l.status==='proposta').length}</div></div>
+    <div class="stat"><div class="stat-label">Fechados</div><div class="stat-value accent">${leads.filter(l=>l.status==='fechado'&&l.clienteId).length} <span style="font-size:14px;font-weight:500;color:var(--text2)">convertidos</span></div></div>
+    <div class="stat"><div class="stat-label">Pipeline Estimado</div><div class="stat-value accent" style="font-size:${Object.keys(pipelineMap).length>1?'22px':'36px'};line-height:1.2">${pipelineHtml}</div></div>
+  </div>
+  <div class="section-header"><span class="section-title">Kanban de Leads</span></div>
+  <div class="kanban">`;
+  STATUSES.forEach(st=>{
+    const cols=leads.filter(l=>l.status===st).sort((a,b)=>{
+      if(!a.followup && !b.followup) return 0;
+      if(!a.followup) return 1;
+      if(!b.followup) return -1;
+      return a.followup.localeCompare(b.followup);
+    });
+    h+=`<div class="col st-${st}" ondragover="event.preventDefault()" ondrop="handleDrop(event,'${st}')">
+      <div class="col-header"><span class="col-title">${ST_LABEL[st]}</span><span class="col-count">${cols.length}</span></div>`;
+    if(!cols.length) h+=`<div class="empty-col">Vazio</div>`;
+    cols.forEach(l=>{
+      const convertido=!!l.clienteId;
+      h+=`<div class="card" draggable="true" ondragstart="event.dataTransfer.setData('text/plain','${l.id}')" onclick="openLeadForm('${l.id}')">
+        <div class="card-proj">
+          <span class="badge ${BADGE[l.proj]}">${PROJ[l.proj]}</span>
+          ${convertido?`<span style="font-size:12px;font-weight:800;color:var(--green);background:rgba(93,202,165,0.1);border:1px solid rgba(93,202,165,0.25);padding:2px 7px;border-radius:2px;letter-spacing:1px">✓ CLIENTE</span>`:''}
+        </div>
+        <div class="card-name">${l.nome}</div>
+        <div class="card-nicho">${l.nicho||'&nbsp;'}</div>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+          <div class="card-value">${l.valorEstimado?`<span style="font-size:11px;opacity:.6;margin-right:2px">${l.moeda||'BRL'}</span>${l.valorEstimado}`:'—'}</div>
+          ${l.followup&&st!=='fechado'?`<div class="card-followup">↻ ${new Date(l.followup+'T00:00:00').toLocaleDateString('pt-BR')}</div>`:''}
+        </div>
+        <div class="card-footer">
+          <span class="card-date">${l.contatoData||''}</span>
+          ${st==='fechado'&&!convertido?`<button class="btn" style="font-size:12px;padding:3px 9px" onclick="event.stopPropagation();openConvertLeadForm('${l.id}')">Converter →</button>`:''}
+        </div>
+      </div>`;
+    });
+    h+=`</div>`;
+  });
+  h+=`</div>`;
+  document.getElementById('main-content').innerHTML=h;
+}
+
+async function handleDrop(e,status){
+  const id=e.dataTransfer.getData('text/plain');
+  const l=data.leads.find(x=>x.id===id); if(!l) return;
+  const old=l.status; l.status=status; render();
+  const {error}=await sb.from('leads').update({status}).eq('id',id);
+  if(error){ l.status=old; render(); toast('Erro ao mover lead'); }
+}
+
+// ─── LEAD FORM ────────────────────────────────────────────────────────────────
+function openLeadForm(id){
+  // SUPABASE: await supabase.from('leads').select('*').eq('id',id).single()
+  const l=id?data.leads.find(x=>x.id===id):null;
+  const convertido=l&&!!l.clienteId;
+  modal(`<div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-divider"></div>
+    <div class="modal-title">${l?'Editar Lead':'Novo Lead'}</div>
+    ${convertido?`<div style="background:rgba(93,202,165,0.08);border:1px solid rgba(93,202,165,0.2);border-radius:4px;padding:10px 14px;margin-bottom:20px;font-size:13px;color:var(--green);font-weight:700">✓ Lead já convertido em cliente</div>`:''}
+    <div class="form-row"><label class="form-label">Nome / Empresa</label><input class="form-input" id="fn" value="${l?l.nome:''}" placeholder="Ex: Ana Martins"></div>
+    <div class="form-row"><label class="form-label">Nicho</label><input class="form-input" id="fni" value="${l?l.nicho||'':''}" placeholder="Ex: Clínica estética"></div>
+    <div class="form-row"><label class="form-label">Projeto</label><select class="form-input" id="fp">${Object.keys(PROJ).map(p=>`<option value="${p}" ${l&&l.proj===p?'selected':''}>${PROJ[p]}</option>`).join('')}</select></div>
+    <div class="form-row"><label class="form-label">Status</label><select class="form-input" id="fs">${STATUSES.map(s=>`<option value="${s}" ${l&&l.status===s?'selected':''}>${ST_LABEL[s]}</option>`).join('')}</select></div>
+    <div class="form-row"><label class="form-label">Tipo de serviço</label><select class="form-input" id="ftipo">${['Assessoria','Consultoria','GMN','Landing Page','Outros'].map(t=>`<option ${l&&l.tipo===t?'selected':''}>${t}</option>`).join('')}</select></div>
+    <div class="form-row"><label class="form-label">Próximo follow-up</label><input class="form-input" type="date" id="ffup" value="${l&&l.followup?l.followup:''}"></div>
+    <div class="form-row"><label class="form-label">Valor estimado</label>
+      <div style="display:flex;gap:8px">
+        <select class="form-input" id="fmoeda" style="width:90px;flex-shrink:0">
+          <option value="BRL" ${!l||l.moeda==='BRL'?'selected':''}>BRL</option>
+          <option value="USD" ${l&&l.moeda==='USD'?'selected':''}>USD</option>
+          <option value="EUR" ${l&&l.moeda==='EUR'?'selected':''}>EUR</option>
+        </select>
+        <input class="form-input" id="fv" value="${l?l.valorEstimado||'':''}" placeholder="Ex: 3500">
+      </div>
+    </div>
+    <div class="form-row"><label class="form-label">Observações</label><textarea class="form-input" id="fo">${l?l.obs||'':''}</textarea></div>
+    <div class="form-actions">
+      ${l&&!convertido?`<button class="btn btn-danger" onclick="deleteLead('${l.id}')">Remover</button>`:''}
+      ${l&&l.status==='fechado'&&!convertido?`<button class="btn" style="border-color:var(--green);color:var(--green)" onclick="closeModal();openConvertLeadForm('${l.id}')">Converter em Cliente →</button>`:''}
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn" onclick="${l?`updateLead('${l.id}')`:'saveLead()'}">${l?'Salvar':'Adicionar'}</button>
+    </div>
+  </div>`);
+}
+
+async function saveLead(){
+  const payload={nome:val('fn')||'Sem nome',nicho:val('fni'),proj:val('fp'),status:val('fs'),valor_estimado:parseFloat(val('fv').replace(/[^\d.,]/g,'').replace(',','.'))||null,moeda:val('fmoeda')||'BRL',tipo:val('ftipo'),followup:val('ffup')||null,obs:val('fo'),contato_data:new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}),cliente_id:null};
+  const {data:row,error}=await sb.from('leads').insert(payload).select().single();
+  if(error){ toast('Erro ao salvar lead: '+error.message); return; }
+  data.leads.unshift(mapLead(row));
+  closeModal(); render(); toast('Lead adicionado!','success');
+}
+async function updateLead(id){
+  const payload={nome:val('fn'),nicho:val('fni'),proj:val('fp'),status:val('fs'),valor_estimado:parseFloat(val('fv').replace(/[^\d.,]/g,'').replace(',','.'))||null,moeda:val('fmoeda')||'BRL',tipo:val('ftipo'),followup:val('ffup')||null,obs:val('fo')};
+  const {error}=await sb.from('leads').update(payload).eq('id',id);
+  if(error){ toast('Erro ao atualizar lead'); return; }
+  const l=data.leads.find(x=>x.id===id);
+  if(l) Object.assign(l,{nome:payload.nome,nicho:payload.nicho,proj:payload.proj,status:payload.status,valorEstimado:payload.valor_estimado?String(payload.valor_estimado):'',moeda:payload.moeda,tipo:payload.tipo,followup:payload.followup,obs:payload.obs});
+  closeModal(); render();
+}
+async function deleteLead(id){
+  if(!confirm('Remover este lead?')) return;
+  const {error}=await sb.from('leads').delete().eq('id',id);
+  if(error){ toast('Erro ao remover lead'); return; }
+  data.leads=data.leads.filter(x=>x.id!==id);
+  closeModal(); render();
+}
+
+// ─── CONVERTER LEAD → CLIENTE ─────────────────────────────────────────────────
+function openConvertLeadForm(leadId){
+  // SUPABASE: await supabase.from('leads').select('*').eq('id',leadId).single()
+  const l=data.leads.find(x=>x.id===leadId); if(!l) return;
+  const hoje=new Date().toISOString().slice(0,10);
+  modal(`<div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-divider"></div>
+    <div class="modal-title">Converter em Cliente</div>
+    <div style="background:var(--terra7);border:1px solid rgba(194,107,58,0.2);border-radius:4px;padding:10px 14px;margin-bottom:20px;font-size:13px;color:var(--terra)">
+      Lead: <strong>${l.nome}</strong> · ${PROJ[l.proj]||l.proj} · ${l.tipo||''}
+    </div>
+    <div style="font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:16px">Dados do Cliente</div>
+    <div class="form-row"><label class="form-label">Nome completo</label><input class="form-input" id="c_nome" value="${l.nome}"></div>
+    <div class="form-row"><label class="form-label">Empresa</label><input class="form-input" id="c_empresa" placeholder="Nome da empresa"></div>
+    <div class="form-row"><label class="form-label">Instagram</label><input class="form-input" id="c_instagram" placeholder="@usuario"></div>
+    <div class="form-row"><label class="form-label">Localização</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+        <input class="form-input" id="c_cidade" placeholder="Cidade">
+        <input class="form-input" id="c_estado" placeholder="Estado (ex: SP)">
+      </div>
+      <input class="form-input" id="c_pais" placeholder="País" value="Brasil">
+    </div>
+    <div class="form-row"><label class="form-label">Origem</label><select class="form-input" id="c_conheceu">${ORIGENS.map(o=>`<option>${o}</option>`).join('')}</select></div>
+    <div class="form-row"><label class="form-label">Observação</label><textarea class="form-input" id="c_obs">${l.obs||''}</textarea></div>
+    <div style="font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:16px;margin-top:8px">Contrato</div>
+    <div class="form-row"><label class="form-label">Valor da parcela / mensal</label><input class="form-input" id="ct_valor" value="${l.valorEstimado?l.valorEstimado.replace(/[^\d.,]/g,''):''}" placeholder="0.00"></div>
+    <div class="form-row"><label class="form-label">Recorrência</label>${_recSelect('')}</div>
+    ${_parceladoSection(null,null)}
+    <div class="form-row"><label class="form-label">Data de início</label><input class="form-input" type="date" id="ct_inicio" value="${hoje}"></div>
+    <div class="form-row"><label class="form-label">Vencimento do contrato</label><input class="form-input" type="date" id="ct_vencimento"></div>
+    <div class="form-row"><label class="form-label">Dia do vencimento mensal</label>${selectDiaVencimento(null)}<div style="font-size:12px;color:var(--text3);margin-top:5px">Dia do mês em que o pagamento vence</div></div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn" style="border-color:var(--green);color:var(--green);background:rgba(93,202,165,0.08)" onclick="convertLead('${leadId}')">✓ Confirmar Conversão</button>
+    </div>
+  </div>`);
+  setTimeout(window._chkRec,0);
+}
+
+async function convertLead(leadId){
+  const l=data.leads.find(x=>x.id===leadId); if(!l) return;
+  const nome=val('c_nome')||l.nome;
+  const av=nome.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
+  const valor=parseFloat((val('ct_valor')||'0').replace(',','.'))||0;
+
+  const {data:cRow,error:cErr}=await sb.from('clientes').insert({nome,empresa:val('c_empresa'),instagram:val('c_instagram'),proj:l.proj,status:'Ativo',como_conheceu:val('c_conheceu'),observacao:val('c_obs'),lead_id:leadId,av,cidade:val('c_cidade')||null,estado:val('c_estado')||null,pais:val('c_pais')||'Brasil'}).select().single();
+  if(cErr){ toast('Erro ao criar cliente: '+cErr.message); return; }
+
+  const {data:ctRow,error:ctErr}=await sb.from('contratos').insert({cliente_id:cRow.id,valor,recorrencia:val('ct_recorrencia')||'Mensal',data_inicio:val('ct_inicio')||new Date().toISOString().slice(0,10),vencimento:val('ct_vencimento')||null,status:'Ativo',moeda:data.currency||'BRL',dia_vencimento:parseInt(val('ct_dia_venc'))||null,num_parcelas:val('ct_recorrencia')==='Parcelado'?(parseInt(val('ct_num_parcelas'))||null):null}).select().single();
+  if(ctErr){ toast('Erro ao criar contrato: '+ctErr.message); return; }
+
+  await sb.from('leads').update({cliente_id:cRow.id}).eq('id',leadId);
+
+  data.clientes.unshift(mapCliente(cRow));
+  data.contratos.push(mapContrato(ctRow));
+  l.clienteId=cRow.id;
+
+  closeModal(); switchTab('clientes');
+  toast('Lead convertido em cliente!','success');
+}
+
+// ─── CLIENTES ─────────────────────────────────────────────────────────────────
+let clienteTab = 'ativos'; // 'ativos' | 'inativos'
+function setClienteTab(t){ clienteTab=t; render(); }
+
+// Um cliente é considerado inativo se status='Inativo' OU contrato vencido
+function isClienteVencido(c){
+  if(c.status==='Inativo') return true;
+  const ct=getContratoAtivo(c.id);
+  if(!ct||!ct.vencimento) return false;
+  return ct.vencimento < new Date().toISOString().slice(0,10);
+}
+
+function renderClientes(){
+  // SUPABASE: await supabase.from('clientes').select('*,contratos(*),leads(*)').order('created_at',{ascending:false})
+  const todos = filtered(data.clientes);
+  const ativos   = todos.filter(c=>!isClienteVencido(c));
+  const inativos = todos.filter(c=> isClienteVencido(c));
+  const lista    = clienteTab==='ativos' ? ativos : inativos;
+
+  // Cabeçalho com tabs
+  let h=`
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+    <div style="display:flex;gap:4px">
+      <button onclick="setClienteTab('ativos')" style="padding:7px 18px;border-radius:4px;border:1px solid ${clienteTab==='ativos'?'rgba(93,202,165,0.4)':'var(--border)'};background:${clienteTab==='ativos'?'rgba(93,202,165,0.08)':'transparent'};color:${clienteTab==='ativos'?'var(--green)':'var(--text3)'};font-family:'Raleway',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .2s">
+        Ativos <span style="margin-left:6px;background:${clienteTab==='ativos'?'rgba(93,202,165,0.15)':'var(--bg3)'};padding:1px 7px;border-radius:10px;font-size:12px">${ativos.length}</span>
+      </button>
+      <button onclick="setClienteTab('inativos')" style="padding:7px 18px;border-radius:4px;border:1px solid ${clienteTab==='inativos'?'rgba(226,75,74,0.4)':'var(--border)'};background:${clienteTab==='inativos'?'rgba(226,75,74,0.08)':'transparent'};color:${clienteTab==='inativos'?'var(--red)':'var(--text3)'};font-family:'Raleway',sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all .2s">
+        Inativos <span style="margin-left:6px;background:${clienteTab==='inativos'?'rgba(226,75,74,0.12)':'var(--bg3)'};padding:1px 7px;border-radius:10px;font-size:12px">${inativos.length}</span>
+      </button>
+    </div>
+    <span style="font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3)">${todos.length} clientes no total</span>
+  </div>`;
+
+  if(!lista.length){
+    const msg = clienteTab==='ativos'
+      ? 'Nenhum cliente ativo. Converta um lead ou adicione manualmente.'
+      : 'Nenhum cliente inativo ou com contrato vencido.';
+    h+=`<div class="empty-state"><div class="empty-icon">${clienteTab==='ativos'?'📋':'🗂️'}</div><div class="empty-text">${msg}</div></div>`;
+  } else {
+    h+=`<div class="clients-grid">`;
+    lista.forEach(c=>{
+      const ct=getContratoAtivo(c.id);
+      const lead=c.leadId?data.leads.find(l=>l.id===c.leadId):null;
+      const vencido=isClienteVencido(c);
+      const recRaw=(ct?.recorrencia||'').toLowerCase();
+      const recCor=ct?(recRaw.includes('mensal')||recRaw.includes('parcelado')?'var(--green)':recRaw.includes('único')?'var(--amber)':'var(--blue)'):'var(--text3)';
+      const recDisplay=ct?(ct.recorrencia==='Parcelado'&&ct.numParcelas?`Parcelado ${ct.numParcelas}x`:ct.recorrencia):'—';
+
+      // Info de vencimento para inativos
+      let diasDesdeVenc='';
+      if(vencido && ct && ct.vencimento){
+        const diffMs=new Date()-new Date(ct.vencimento+'T00:00:00');
+        const dias=Math.floor(diffMs/86400000);
+        diasDesdeVenc=dias===0?'venceu hoje':`venceu há ${dias} dia${dias!==1?'s':''}`;
+      }
+
+      h+=`<div class="client-card" style="${vencido?'opacity:0.8;border-color:rgba(226,75,74,0.15)':''}">
+        <div class="client-header">
+          <div class="avatar" style="background:${AV_BG[c.proj]};color:${AV_COLOR[c.proj]};${vencido?'filter:grayscale(0.4)':''}">${c.av||c.nome.slice(0,2).toUpperCase()}</div>
+          <div style="flex:1;min-width:0">
+            <div class="client-name">${c.empresa||c.nome}</div>
+            <div class="client-sub">
+              <span class="badge ${BADGE[c.proj]}">${PROJ[c.proj]}</span>
+              ${c.empresa?`<span>${c.nome}</span>`:''}
+              ${lead?`<span style="font-size:12px;color:var(--terra);background:var(--terra7);border:1px solid rgba(194,107,58,0.2);padding:1px 6px;border-radius:2px">via pipeline</span>`:''}
+              ${vencido?`<span style="font-size:12px;color:var(--red);background:rgba(226,75,74,0.1);border:1px solid rgba(226,75,74,0.2);padding:1px 6px;border-radius:2px">● Inativo</span>`:''}
+            </div>
+          </div>
+          <button class="btn ${vencido?'':'btn-ghost'}" style="font-size:13px;padding:4px 10px;${vencido?'border-color:var(--terra);color:var(--terra)':''}" onclick="openClienteEdit('${c.id}')">
+            ${vencido?'Reativar':'Editar'}
+          </button>
+        </div>
+        ${ct
+          ?`<div style="background:var(--bg3);border-bottom:1px solid var(--border);padding:14px 22px;display:flex;gap:28px;align-items:center;flex-wrap:wrap">
+              <div><div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Contrato</div>
+                <div style="font-size:22px;font-weight:900;letter-spacing:-0.5px;color:${vencido?'var(--text3)':'var(--terra)'}">${formatCurrency(ct.valor)}</div></div>
+              <div><div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Recorrência</div>
+                <span style="font-size:13px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:${vencido?'var(--text3)':recCor};border:1px solid ${vencido?'var(--border)':recCor+'44'};padding:2px 8px;border-radius:2px">${recDisplay}</span></div>
+              <div><div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Início</div>
+                <div style="font-size:12px;color:var(--text2)">${ct.dataInicio?new Date(ct.dataInicio+'T00:00:00').toLocaleDateString('pt-BR'):'—'}</div></div>
+              <div><div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Vencimento</div>
+                <div style="font-size:12px;color:${vencido?'var(--red)':'var(--text2)'};font-weight:${vencido?'700':'400'}">${ct.vencimento?new Date(ct.vencimento+'T00:00:00').toLocaleDateString('pt-BR'):'—'}${diasDesdeVenc?` · ${diasDesdeVenc}`:''}</div></div>
+            </div>`
+          :`<div style="background:rgba(239,159,39,0.05);border-bottom:1px solid rgba(239,159,39,0.15);padding:10px 22px;font-size:13px;color:var(--amber);font-weight:700">
+              ⚠ Sem contrato —
+              <button onclick="openAddContratoForm('${c.id}')" style="background:none;border:none;color:var(--amber);text-decoration:underline;cursor:pointer;font-family:inherit;font-size:13px;font-weight:700;padding:0">Adicionar contrato</button>
+            </div>`}
+        ${vencido?`<div style="background:rgba(194,107,58,0.05);border-bottom:1px solid rgba(194,107,58,0.12);padding:10px 22px;font-size:13px;color:var(--terra);font-weight:600">
+          Clique em <strong>Reativar</strong> para atualizar o contrato e reativar este cliente.
+        </div>`:''}
+        <div class="client-body">
+          <div style="display:flex;gap:16px;flex-wrap:wrap">
+            <div><strong>Instagram:</strong> ${c.instagram||'—'}</div>
+            <div><strong>Origem:</strong> ${c.comoConheceu||'—'}</div>
+            ${(c.cidade||c.estado||c.pais)?`<div><strong>📍</strong> ${[c.cidade,c.estado,c.pais].filter(Boolean).join(' · ')}</div>`:''}
+          </div>
+          ${c.observacao?`<div style="margin-top:8px"><strong>Obs:</strong> ${c.observacao}</div>`:''}
+        </div>
+      </div>`;
+    });
+    h+=`</div>`;
+  }
+  document.getElementById('main-content').innerHTML=h;
+}
+
+function openClienteForm(){
+  const hoje=new Date().toISOString().slice(0,10);
+  modal(`<div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-divider"></div>
+    <div class="modal-title">Novo Cliente</div>
+    <div style="font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:16px">Dados do Cliente</div>
+    <div class="form-row"><label class="form-label">Nome</label><input class="form-input" id="c_nome" placeholder="Ex: João Silva"></div>
+    <div class="form-row"><label class="form-label">Empresa</label><input class="form-input" id="c_empresa"></div>
+    <div class="form-row"><label class="form-label">Instagram</label><input class="form-input" id="c_instagram" placeholder="@usuario"></div>
+    <div class="form-row"><label class="form-label">Projeto</label><select class="form-input" id="c_proj">${Object.keys(PROJ).map(p=>`<option value="${p}">${PROJ[p]}</option>`).join('')}</select></div>
+    <div class="form-row"><label class="form-label">Origem</label><select class="form-input" id="c_conheceu">${ORIGENS.map(o=>`<option>${o}</option>`).join('')}</select></div>
+    <div class="form-row"><label class="form-label">Observação</label><textarea class="form-input" id="c_obs"></textarea></div>
+    <div style="font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:16px;margin-top:8px">Contrato</div>
+    <div class="form-row"><label class="form-label">Valor da parcela / mensal</label><input class="form-input" id="ct_valor" placeholder="0.00"></div>
+    <div class="form-row"><label class="form-label">Recorrência</label>${_recSelect('')}</div>
+    ${_parceladoSection(null,null)}
+    <div class="form-row"><label class="form-label">Data de início</label><input class="form-input" type="date" id="ct_inicio" value="${hoje}" oninput="window._calcParc()"></div>
+    <div class="form-row"><label class="form-label">Vencimento do contrato</label><input class="form-input" type="date" id="ct_vencimento"></div>
+    <div class="form-row"><label class="form-label">Dia do vencimento mensal</label>${selectDiaVencimento(null)}<div style="font-size:12px;color:var(--text3);margin-top:5px">Dia do mês em que o pagamento vence</div></div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn" onclick="saveCliente()">Adicionar</button>
+    </div>
+  </div>`);
+}
+
+async function saveCliente(){
+  const nome=val('c_nome')||'Sem nome';
+  const av=nome.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
+  const valor=parseFloat((val('ct_valor')||'0').replace(',','.'))||0;
+
+  const {data:cRow,error:cErr}=await sb.from('clientes').insert({nome,empresa:val('c_empresa'),instagram:val('c_instagram'),proj:val('c_proj')||'jp',status:'Ativo',como_conheceu:val('c_conheceu'),observacao:val('c_obs'),lead_id:null,av,cidade:val('c_cidade')||null,estado:val('c_estado')||null,pais:val('c_pais')||'Brasil'}).select().single();
+  if(cErr){ toast('Erro ao salvar cliente: '+cErr.message); return; }
+  data.clientes.unshift(mapCliente(cRow));
+
+  if(valor>0){
+    const {data:ctRow,error:ctErr}=await sb.from('contratos').insert({cliente_id:cRow.id,valor,recorrencia:val('ct_recorrencia')||'Mensal',data_inicio:val('ct_inicio')||new Date().toISOString().slice(0,10),vencimento:val('ct_vencimento')||null,status:'Ativo',moeda:data.currency||'BRL',dia_vencimento:parseInt(val('ct_dia_venc'))||null,num_parcelas:val('ct_recorrencia')==='Parcelado'?(parseInt(val('ct_num_parcelas'))||null):null}).select().single();
+    if(!ctErr) data.contratos.push(mapContrato(ctRow));
+  }
+  closeModal(); render(); toast('Cliente adicionado!','success');
+}
+
+function openClienteEdit(id){
+  const c=data.clientes.find(x=>x.id===id); if(!c) return;
+  const ct=getContratoAtivo(id);
+  modal(`<div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-divider"></div>
+    <div class="modal-title">Editar Cliente</div>
+    <div style="font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:16px">Dados do Cliente</div>
+    <div class="form-row"><label class="form-label">Nome</label><input class="form-input" id="c_nome" value="${c.nome}"></div>
+    <div class="form-row"><label class="form-label">Empresa</label><input class="form-input" id="c_empresa" value="${c.empresa||''}"></div>
+    <div class="form-row"><label class="form-label">Instagram</label><input class="form-input" id="c_instagram" value="${c.instagram||''}"></div>
+    <div class="form-row"><label class="form-label">Localização</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+        <input class="form-input" id="c_cidade" placeholder="Cidade" value="${c.cidade||''}">
+        <input class="form-input" id="c_estado" placeholder="Estado (ex: SP)" value="${c.estado||''}">
+      </div>
+      <input class="form-input" id="c_pais" placeholder="País" value="${c.pais||'Brasil'}">
+    </div>
+    <div class="form-row"><label class="form-label">Status</label><select class="form-input" id="c_status"><option ${c.status==='Ativo'?'selected':''}>Ativo</option><option ${c.status==='Inativo'?'selected':''}>Inativo</option></select></div>
+    <div class="form-row"><label class="form-label">Projeto</label><select class="form-input" id="c_proj">${Object.keys(PROJ).map(p=>`<option value="${p}" ${c.proj===p?'selected':''}>${PROJ[p]}</option>`).join('')}</select></div>
+    <div class="form-row"><label class="form-label">Origem</label><select class="form-input" id="c_conheceu">${ORIGENS.map(o=>`<option ${(c.comoConheceu||'').toLowerCase()===o.toLowerCase()?'selected':''}>${o}</option>`).join('')}</select></div>
+    <div class="form-row"><label class="form-label">Observação</label><textarea class="form-input" id="c_obs">${c.observacao||''}</textarea></div>
+    <div style="font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:16px;margin-top:8px">Contrato Ativo</div>
+    <div class="form-row"><label class="form-label">Valor da parcela / mensal</label><input class="form-input" id="ct_valor" value="${ct?ct.valor:''}" placeholder="0.00"></div>
+    <div class="form-row"><label class="form-label">Recorrência</label>${_recSelect(ct?ct.recorrencia:'')}</div>
+    ${_parceladoSection(ct?ct.numParcelas:null, ct?ct.valor:null)}
+    <div class="form-row"><label class="form-label">Data de início</label><input class="form-input" type="date" id="ct_inicio" value="${ct?ct.dataInicio:''}" oninput="window._calcParc()"></div>
+    <div class="form-row"><label class="form-label">Vencimento do contrato</label><input class="form-input" type="date" id="ct_vencimento" value="${ct?ct.vencimento:''}"></div>
+    <div class="form-row"><label class="form-label">Dia do vencimento mensal</label>${selectDiaVencimento(ct?ct.diaVencimento:null)}<div style="font-size:12px;color:var(--text3);margin-top:5px">Dia do mês em que o pagamento vence</div></div>
+    <div class="form-actions">
+      <button class="btn btn-danger" onclick="deleteCliente('${id}')">Remover</button>
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn" onclick="updateCliente('${id}')">Salvar</button>
+    </div>
+  </div>`);
+  setTimeout(window._chkRec, 0);
+}
+
+async function updateCliente(id){
+  const c=data.clientes.find(x=>x.id===id); if(!c) return;
+  const nome=val('c_nome')||c.nome;
+  const novoVencimento=val('ct_vencimento')||null;
+  const hoje=new Date().toISOString().slice(0,10);
+
+  // Reativação automática: se o novo vencimento for futuro, força status Ativo
+  let statusFinal=val('c_status')||c.status;
+  if(novoVencimento && novoVencimento >= hoje) statusFinal='Ativo';
+
+  const cPayload={nome,empresa:val('c_empresa'),instagram:val('c_instagram'),status:statusFinal,proj:val('c_proj')||c.proj,como_conheceu:val('c_conheceu')||c.comoConheceu,observacao:val('c_obs'),av:nome.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase(),cidade:val('c_cidade')||null,estado:val('c_estado')||null,pais:val('c_pais')||'Brasil'};
+  const {error:cErr}=await sb.from('clientes').update(cPayload).eq('id',id);
+  if(cErr){ toast('Erro ao atualizar cliente'); return; }
+  Object.assign(c,{nome:cPayload.nome,empresa:cPayload.empresa,instagram:cPayload.instagram,status:statusFinal,proj:cPayload.proj,comoConheceu:cPayload.como_conheceu,observacao:cPayload.observacao,av:cPayload.av,cidade:cPayload.cidade,estado:cPayload.estado,pais:cPayload.pais});
+
+  const valor=parseFloat((val('ct_valor')||'0').replace(',','.'))||0;
+  let ct=getContratoAtivo(id);
+  if(ct){
+    const diaVenc=parseInt(val('ct_dia_venc'))||null;
+    const recNew=val('ct_recorrencia')||ct.recorrencia;
+    const numParc=recNew==='Parcelado'?(parseInt(val('ct_num_parcelas'))||null):null;
+    const ctP={valor,recorrencia:recNew,data_inicio:val('ct_inicio')||ct.dataInicio,vencimento:novoVencimento,dia_vencimento:diaVenc,num_parcelas:numParc};
+    await sb.from('contratos').update(ctP).eq('id',ct.id);
+    Object.assign(ct,{valor,recorrencia:ctP.recorrencia,dataInicio:ctP.data_inicio,vencimento:ctP.vencimento,diaVencimento:diaVenc,numParcelas:numParc});
+  } else if(valor>0){
+    const {data:ctRow}=await sb.from('contratos').insert({cliente_id:id,valor,recorrencia:val('ct_recorrencia')||'Mensal',data_inicio:val('ct_inicio'),vencimento:novoVencimento,status:'Ativo',moeda:data.currency||'BRL',dia_vencimento:parseInt(val('ct_dia_venc'))||null}).select().single();
+    if(ctRow) data.contratos.push(mapContrato(ctRow));
+  }
+
+  const reativado = statusFinal==='Ativo' && c.status!=='Ativo';
+  closeModal();
+  clienteTab='ativos'; // volta para aba ativos após reativar
+  render();
+  if(reativado) toast('Cliente reativado com sucesso!','success');
+}
+
+async function deleteCliente(id){
+  if(!confirm('Remover cliente, contratos e faturas vinculados?')) return;
+  const {error}=await sb.from('clientes').delete().eq('id',id); // cascade via FK
+  if(error){ toast('Erro ao remover cliente'); return; }
+  data.clientes=data.clientes.filter(x=>x.id!==id);
+  data.contratos=data.contratos.filter(x=>x.clienteId!==id);
+  data.faturas=data.faturas.filter(x=>x.clienteId!==id);
+  const lead=data.leads.find(l=>l.clienteId===id); if(lead) lead.clienteId=null;
+  closeModal(); render();
+}
+
+function openAddContratoForm(clienteId){
+  const hoje=new Date().toISOString().slice(0,10);
+  modal(`<div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-divider"></div>
+    <div class="modal-title">Novo Contrato</div>
+    <div class="form-row"><label class="form-label">Valor da parcela / mensal</label><input class="form-input" id="ct_valor" placeholder="0.00"></div>
+    <div class="form-row"><label class="form-label">Recorrência</label>${_recSelect('')}</div>
+    ${_parceladoSection(null,null)}
+    <div class="form-row"><label class="form-label">Data de início</label><input class="form-input" type="date" id="ct_inicio" value="${hoje}" oninput="window._calcParc()"></div>
+    <div class="form-row"><label class="form-label">Vencimento do contrato</label><input class="form-input" type="date" id="ct_vencimento"></div>
+    <div class="form-row"><label class="form-label">Dia do vencimento mensal</label>${selectDiaVencimento(null)}</div>
+    <div class="form-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn" onclick="saveContrato('${clienteId}')">Salvar</button></div>
+  </div>`);
+}
+async function saveContrato(clienteId){
+  const valor=parseFloat((val('ct_valor')||'0').replace(',','.'))||0;
+  if(!valor){ toast('Informe o valor'); return; }
+  const {data:ctRow,error}=await sb.from('contratos').insert({cliente_id:clienteId,valor,recorrencia:val('ct_recorrencia')||'Mensal',data_inicio:val('ct_inicio'),vencimento:val('ct_vencimento')||null,status:'Ativo',moeda:data.currency||'BRL',dia_vencimento:parseInt(val('ct_dia_venc'))||null}).select().single();
+  if(error){ toast('Erro ao salvar contrato'); return; }
+  data.contratos.push(mapContrato(ctRow));
+  closeModal(); render(); toast('Contrato adicionado!','success');
+}
+
+// ─── TAREFAS ──────────────────────────────────────────────────────────────────
+function renderTarefas(){
+  const hoje = new Date().toISOString().slice(0,10);
+  const clienteIds = new Set(filtered(data.clientes).map(c=>c.id));
+  const tarefas = projFilter==='all'
+    ? data.tarefas
+    : data.tarefas.filter(t=>!t.clienteId||clienteIds.has(t.clienteId));
+
+  // contadores por status para o header
+  const tot = tarefas.length;
+  const pend = tarefas.filter(t=>t.status!=='concluido').length;
+  const venc = tarefas.filter(t=>t.dataEntrega&&t.dataEntrega<hoje&&t.status!=='concluido').length;
+
+  let h=`
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+    <div style="display:flex;gap:20px;align-items:center">
+      <span style="font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);display:flex;align-items:center;gap:10px"><span style="width:18px;height:1px;background:var(--terra);display:inline-block"></span>Kanban de Tarefas</span>
+      <span style="font-size:12px;color:var(--text3)">${tot} tarefa${tot!==1?'s':''} · ${pend} pendente${pend!==1?'s':''}</span>
+      ${venc>0?`<span style="font-size:11px;font-weight:700;color:var(--red);background:rgba(226,75,74,0.1);border:1px solid rgba(226,75,74,0.25);padding:2px 10px;border-radius:2px">⚠ ${venc} vencida${venc!==1?'s':''}</span>`:''}
+    </div>
+  </div>
+  <div class="kanban" style="grid-template-columns:repeat(4,1fr)">`;
+
+  TASK_STATUSES.forEach(st=>{
+    const cols = tarefas.filter(t=>t.status===st).sort((a,b)=>{
+      if(!a.dataEntrega && !b.dataEntrega) return 0;
+      if(!a.dataEntrega) return 1;
+      if(!b.dataEntrega) return -1;
+      return a.dataEntrega.localeCompare(b.dataEntrega);
+    });
+    h+=`<div class="col ts-${st}" ondragover="event.preventDefault()" ondrop="handleDropTarefa(event,'${st}')">
+      <div class="col-header">
+        <span class="col-title">${TASK_LABEL[st]}</span>
+        <span class="col-count">${cols.length}</span>
+      </div>`;
+    if(!cols.length) h+=`<div class="empty-col">Vazio</div>`;
+    cols.forEach(t=>{
+      const cli = data.clientes.find(c=>c.id===t.clienteId);
+      const checkTotal = t.checklist.length;
+      const checkFeito = t.checklist.filter(i=>i.feito).length;
+      const checkPct   = checkTotal>0?Math.round((checkFeito/checkTotal)*100):0;
+      const vencido    = t.dataEntrega&&t.dataEntrega<hoje&&st!=='concluido';
+      const venceHoje  = t.dataEntrega&&t.dataEntrega===hoje&&st!=='concluido';
+      const dataCorEntry = vencido?'var(--red)':venceHoje?'var(--amber)':'var(--text3)';
+
+      h+=`<div class="card" draggable="true"
+        ondragstart="event.dataTransfer.setData('text/plain','${t.id}')"
+        onclick="openTarefaForm('${t.id}')">
+        ${cli?`<div class="card-proj"><span class="badge ${BADGE[cli.proj]}">${cli.empresa||cli.nome}</span></div>`:''}
+        <div class="card-name" style="margin-bottom:${checkTotal>0||t.obs?'8px':'10px'}">${t.titulo}</div>
+        ${t.obs?`<div style="font-size:12px;color:var(--text3);margin-bottom:8px;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.obs}</div>`:''}
+        ${checkTotal>0?`
+        <div style="margin-bottom:10px">
+          ${t.checklist.slice(0,3).map((item,i)=>`
+          <div class="ckl-item" onclick="event.stopPropagation();toggleTarefaCheck('${t.id}',${i},event)">
+            <div class="ckl-cb ${item.feito?'done':''}">${item.feito?'<span style="color:#fff;font-size:10px;font-weight:900">✓</span>':''}</div>
+            <span class="ckl-text ${item.feito?'done':''}">${item.texto}</span>
+          </div>`).join('')}
+          ${checkTotal>3?`<div style="font-size:11px;color:var(--text4);padding:4px 0">+${checkTotal-3} mais</div>`:''}
+          <div style="margin-top:6px;height:3px;background:var(--border);border-radius:2px;overflow:hidden">
+            <div style="height:100%;width:${checkPct}%;background:${checkPct===100?'var(--green)':'var(--terra)'};border-radius:2px"></div>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-top:3px">${checkFeito}/${checkTotal} concluídos</div>
+        </div>`:''}
+        <div class="card-footer" style="margin-top:4px">
+          <span style="font-size:11px;color:var(--text3)">${t.dataInicio?new Date(t.dataInicio+'T00:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}):''}</span>
+          ${t.dataEntrega?`<div class="card-followup" style="color:${dataCorEntry};background:${vencido?'rgba(226,75,74,0.08)':venceHoje?'rgba(239,159,39,0.08)':'rgba(239,159,39,0.08)'};border-color:${vencido?'rgba(226,75,74,0.3)':venceHoje?'rgba(239,159,39,0.3)':'rgba(239,159,39,0.15)'}">
+            ${vencido?'⚠':'↻'} ${new Date(t.dataEntrega+'T00:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}
+          </div>`:''}
+        </div>
+      </div>`;
+    });
+    h+=`</div>`;
+  });
+  h+=`</div>`;
+  document.getElementById('main-content').innerHTML=h;
+}
+
+async function handleDropTarefa(e,status){
+  const id=e.dataTransfer.getData('text/plain');
+  const t=data.tarefas.find(x=>x.id===id); if(!t) return;
+  const old=t.status; t.status=status; render();
+  const {error}=await sb.from('tarefas').update({status}).eq('id',id);
+  if(error){ t.status=old; render(); toast('Erro ao mover tarefa'); }
+}
+
+async function toggleTarefaCheck(tarefaId,idx,event){
+  if(event) event.stopPropagation();
+  const t=data.tarefas.find(x=>x.id===tarefaId); if(!t) return;
+  t.checklist[idx].feito=!t.checklist[idx].feito;
+  render();
+  const {error}=await sb.from('tarefas').update({checklist:t.checklist}).eq('id',tarefaId);
+  if(error){ t.checklist[idx].feito=!t.checklist[idx].feito; render(); toast('Erro ao atualizar checklist'); }
+}
+
+// ── checklist editor global (usado dentro do modal) ───────────────────────────
+window._ckl = [];
+function _renderCkl(){
+  const el=document.getElementById('ckl-list'); if(!el) return;
+  if(!window._ckl.length){
+    el.innerHTML=`<div style="font-size:12px;color:var(--text4);padding:8px 0;text-align:center;letter-spacing:1px">Nenhum item adicionado</div>`;
+    return;
+  }
+  el.innerHTML=window._ckl.map((item,i)=>`
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+      <div onclick="window._ckl[${i}].feito=!window._ckl[${i}].feito;_renderCkl()"
+        style="width:18px;height:18px;border-radius:3px;border:1px solid ${item.feito?'var(--terra)':'var(--border2)'};background:${item.feito?'var(--terra)':'transparent'};cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s">
+        ${item.feito?'<span style="color:#fff;font-size:11px;font-weight:900">✓</span>':''}
+      </div>
+      <span style="flex:1;font-size:13px;color:${item.feito?'var(--text3)':'var(--text)'};${item.feito?'text-decoration:line-through':''}">${item.texto}</span>
+      <button onclick="window._ckl.splice(${i},1);_renderCkl()"
+        style="background:none;border:none;color:var(--text4);cursor:pointer;font-size:18px;line-height:1;padding:0 2px;transition:color .15s"
+        onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--text4)'">×</button>
+    </div>`).join('');
+}
+function _addCkl(){
+  const el=document.getElementById('ckl-new'); if(!el) return;
+  const txt=el.value.trim(); if(!txt) return;
+  window._ckl.push({texto:txt,feito:false});
+  el.value=''; _renderCkl(); el.focus();
+}
+
+function openTarefaForm(id){
+  const t=id?data.tarefas.find(x=>x.id===id):null;
+  window._ckl = t ? JSON.parse(JSON.stringify(t.checklist)) : [];
+  const cliOptions = data.clientes
+    .filter(c=>!isClienteVencido(c))
+    .map(c=>`<option value="${c.id}" ${t&&t.clienteId===c.id?'selected':''}>${c.nome}${c.empresa?' — '+c.empresa:''}</option>`)
+    .join('');
+
+  modal(`<div class="modal" style="width:540px;max-width:96vw" onclick="event.stopPropagation()">
+    <div class="modal-divider"></div>
+    <div class="modal-title">${t?'Editar Tarefa':'Nova Tarefa'}</div>
+
+    <div class="form-row">
+      <label class="form-label">Cliente</label>
+      <select class="form-input" id="tf_cli">
+        <option value="">Sem cliente vinculado</option>
+        ${cliOptions}
+      </select>
+    </div>
+
+    <div class="form-row">
+      <label class="form-label">Título da tarefa</label>
+      <input class="form-input" id="tf_titulo" value="${t?t.titulo:''}" placeholder="Ex: Entregar relatório mensal">
+    </div>
+
+    <div class="form-row">
+      <label class="form-label">Status</label>
+      <select class="form-input" id="tf_status">
+        ${TASK_STATUSES.map(s=>`<option value="${s}" ${t&&t.status===s?'selected':''}>${TASK_LABEL[s]}</option>`).join('')}
+      </select>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="form-row">
+        <label class="form-label">Data de início</label>
+        <input class="form-input" type="date" id="tf_inicio" value="${t?t.dataInicio:''}">
+      </div>
+      <div class="form-row">
+        <label class="form-label">Data de entrega</label>
+        <input class="form-input" type="date" id="tf_entrega" value="${t?t.dataEntrega:''}">
+      </div>
+    </div>
+
+    <div class="form-row">
+      <label class="form-label">Observações</label>
+      <textarea class="form-input" id="tf_obs" style="min-height:70px">${t?t.obs:''}</textarea>
+    </div>
+
+    <div class="form-row">
+      <label class="form-label">Checklist</label>
+      <div id="ckl-list" style="margin-bottom:8px"></div>
+      <div style="display:flex;gap:8px">
+        <input class="form-input" id="ckl-new" placeholder="Adicionar item..."
+          style="flex:1" onkeydown="if(event.key==='Enter'){event.preventDefault();event.stopPropagation();_addCkl()}">
+        <button class="btn btn-ghost" style="padding:8px 16px;font-size:16px;line-height:1" onclick="_addCkl()">+</button>
+      </div>
+    </div>
+
+    <div class="form-actions">
+      ${t?`<button class="btn btn-danger" onclick="deleteTarefa('${t.id}')">Remover</button>`:''}
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn" onclick="${t?`updateTarefa('${t.id}')`:'saveTarefa()'}">${t?'Salvar':'Adicionar'}</button>
+    </div>
+  </div>`);
+  setTimeout(()=>{ _renderCkl(); window._chkRec(); },0);
+}
+
+async function saveTarefa(){
+  const titulo=val('tf_titulo'); if(!titulo){ toast('Informe o título da tarefa'); return; }
+  const payload={cliente_id:val('tf_cli')||null,titulo,obs:val('tf_obs'),status:val('tf_status')||'a-fazer',data_inicio:val('tf_inicio')||null,data_entrega:val('tf_entrega')||null,checklist:window._ckl||[]};
+  const {data:row,error}=await sb.from('tarefas').insert(payload).select().single();
+  if(error){ toast('Erro ao salvar tarefa: '+error.message); return; }
+  data.tarefas.unshift(mapTarefa(row));
+  closeModal(); render(); toast('Tarefa criada!','success');
+}
+
+async function updateTarefa(id){
+  const titulo=val('tf_titulo'); if(!titulo){ toast('Informe o título'); return; }
+  const payload={cliente_id:val('tf_cli')||null,titulo,obs:val('tf_obs'),status:val('tf_status')||'a-fazer',data_inicio:val('tf_inicio')||null,data_entrega:val('tf_entrega')||null,checklist:window._ckl||[]};
+  const {error}=await sb.from('tarefas').update(payload).eq('id',id);
+  if(error){ toast('Erro ao atualizar tarefa'); return; }
+  const t=data.tarefas.find(x=>x.id===id);
+  if(t) Object.assign(t,{clienteId:payload.cliente_id,titulo:payload.titulo,obs:payload.obs,status:payload.status,dataInicio:payload.data_inicio||'',dataEntrega:payload.data_entrega||'',checklist:payload.checklist});
+  closeModal(); render();
+}
+
+async function deleteTarefa(id){
+  if(!confirm('Remover esta tarefa?')) return;
+  const {error}=await sb.from('tarefas').delete().eq('id',id);
+  if(error){ toast('Erro ao remover tarefa'); return; }
+  data.tarefas=data.tarefas.filter(x=>x.id!==id);
+  closeModal(); render();
+}
+
+/* Financeiro helpers */
+function setCurrency(c){ data.currency = c; saveData(data); render(); }
+function formatCurrency(v){ if(!v && v!==0) return '-'; const locale = data.currency==='BRL'?'pt-BR':'en-US'; return new Intl.NumberFormat(locale,{style:'currency',currency:data.currency||'BRL'}).format(v); }
+
+// ─── PERÍODO SELECIONADO ────────────────────────────────────────────────────
+let finYear = new Date().getFullYear();
+let finMonth = new Date().getMonth() + 1;
+function setFinPeriodo(y, m){ finYear=parseInt(y); finMonth=parseInt(m); render(); }
+function finMesStr(){ return `${finYear}-${String(finMonth).padStart(2,'0')}`; }
+const MESES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const ORIGENS = ['Indicação','Prospecção Ativa','Anúncios','Google','Instagram','LinkedIn','Upwork','YouTube','Outro'];
+
+// ─── FATURAS (SUPABASE-READY) ───────────────────────────────────────────────
+// SUPABASE TABLE: faturas { id, clienteId, mes:'YYYY-MM', valor, status:'pago'|'pendente'|'vencido', dataPagamento }
+function getFatura(clienteId, mes){
+  // SUPABASE: await supabase.from('faturas').select('*').eq('cliente_id',clienteId).eq('mes',mes).maybeSingle()
+  return (data.faturas||[]).find(f=>f.clienteId===clienteId && f.mes===mes);
+}
+async function marcarPago(clienteId){
+  const mes=finMesStr();
+  const ct=getContratoAtivo(clienteId); if(!ct) return;
+  const existing=getFatura(clienteId,mes);
+  const payload={cliente_id:clienteId,contrato_id:ct.id,mes,valor:ct.valor,status:'pago',data_pagamento:new Date().toISOString().slice(0,10)};
+  const {data:row,error}=await sb.from('faturas').upsert(payload,{onConflict:'cliente_id,mes'}).select().single();
+  if(error){ toast('Erro ao registrar pagamento'); return; }
+  if(existing) Object.assign(existing,mapFatura(row));
+  else data.faturas.push(mapFatura(row));
+  render();
+}
+async function marcarPendente(clienteId){
+  const fat=getFatura(clienteId,finMesStr()); if(!fat) return;
+  const {error}=await sb.from('faturas').update({status:'pendente',data_pagamento:null}).eq('id',fat.id);
+  if(error){ toast('Erro ao atualizar status'); return; }
+  fat.status='pendente'; fat.dataPagamento=null; render();
+}
+async function marcarVencido(clienteId){
+  const mes=finMesStr();
+  const ct=getContratoAtivo(clienteId); if(!ct) return;
+  const existing=getFatura(clienteId,mes);
+  const payload={cliente_id:clienteId,contrato_id:ct.id,mes,valor:ct.valor,status:'vencido',data_pagamento:null};
+  const {data:row,error}=await sb.from('faturas').upsert(payload,{onConflict:'cliente_id,mes'}).select().single();
+  if(error){ toast('Erro ao marcar vencimento'); return; }
+  if(existing) Object.assign(existing,mapFatura(row));
+  else data.faturas.push(mapFatura(row));
+  render();
+}
+
+function renderFinanceiro(){
+  const mes = finMesStr();
+  const anoStr = String(finYear);
+
+  // Clientes cobráveis NO MÊS SELECIONADO — respeita recorrência
+  const cliList = filtered(data.clientes || []).filter(c=>{
+    if((c.status||'').toLowerCase() !== 'ativo') return false;
+    const ct = getContratoAtivo(c.id);
+    return ct && isCobravel(ct, mes);
+  });
+
+  const ctValor = c => (getContratoAtivo(c.id)||{}).valor||0;
+  // usa valor da fatura quando disponível (editado ou parcelado customizado)
+  const efValor = c => { const f=getFatura(c.id,mes); return (f&&f.valor)?f.valor:ctValor(c); };
+
+  // ── Mês selecionado — usa statusEfetivo (inclui vencimento automático por dia) ──
+  const recebido  = cliList.filter(c=> statusEfetivo(c.id,mes)==='pago');
+  const vencidoList= cliList.filter(c=>{ const s=statusEfetivo(c.id,mes); return s==='vencido'||s==='vencido-auto'; });
+  const aReceber  = cliList.filter(c=> statusEfetivo(c.id,mes)==='pendente');
+  const totalRecebido = recebido.reduce((s,c)=>s+efValor(c),0);
+  const totalVencido  = vencidoList.reduce((s,c)=>s+efValor(c),0);
+  const totalAReceber = aReceber.reduce((s,c)=>s+efValor(c),0);
+
+  const despesaAtivaNoMes = (dep, m) => {
+    const inicio = dep.data ? dep.data.slice(0,7) : null;
+    const fim    = dep.dataFim ? dep.dataFim.slice(0,7) : null;
+    if(inicio && inicio > m) return false; // ainda não havia começado
+    if(fim    && fim    < m) return false; // já havia encerrado
+    return true;
+  };
+
+  const despesasMes = (data.despesas||[]).reduce((s,dep)=>{
+    if(dep.periodo==='Mensal'){
+      return despesaAtivaNoMes(dep, mes) ? s+(dep.valor||0) : s;
+    }
+    if(dep.periodo==='Único'&&dep.data&&dep.data.startsWith(mes)) return s+(dep.valor||0);
+    return s;
+  },0);
+  const saldoMes = totalRecebido - despesasMes;
+
+  // ── Acumulado anual ───────────────────────────────────────────────────────
+  const receitaAnual = (data.faturas||[]).filter(f=>f.status==='pago'&&f.mes&&f.mes.startsWith(anoStr))
+    .reduce((s,f)=>s+(f.valor||0),0);
+  // Despesas anuais: mensais × meses já passados no ano + únicas do ano
+  const mesAtual = new Date().getMonth()+1;
+  const mesesPassados = finYear < new Date().getFullYear() ? 12 : mesAtual;
+  const despesasAnual = (data.despesas||[]).reduce((s,dep)=>{
+    if(dep.periodo==='Mensal'){
+      // conta cada mês do ano (até mesesPassados) em que a despesa estava ativa
+      let count = 0;
+      for(let m=1; m<=mesesPassados; m++){
+        const mc = `${anoStr}-${String(m).padStart(2,'0')}`;
+        if(despesaAtivaNoMes(dep, mc)) count++;
+      }
+      return s+(dep.valor||0)*count;
+    }
+    if(dep.periodo==='Único'&&dep.data&&dep.data.startsWith(anoStr)) return s+(dep.valor||0);
+    return s;
+  },0);
+  const saldoAnual = receitaAnual - despesasAnual;
+  const mesesComFatura = [...new Set((data.faturas||[]).filter(f=>f.status==='pago'&&f.mes&&f.mes.startsWith(anoStr)).map(f=>f.mes))].length;
+
+  // ── Meta ──────────────────────────────────────────────────────────────────
+  const meta  = data.metaMensal||0;
+  const metaAnual = meta * 12;
+  const metaAtingida = meta>0 && totalRecebido>=meta;
+  const metaPct = meta>0 ? Math.min(Math.round((totalRecebido/meta)*100),100) : 0;
+  const metaAnualPct = metaAnual>0 ? Math.min(Math.round((receitaAnual/metaAnual)*100),100) : 0;
+  const metaCor = meta===0?'var(--text2)':metaAtingida?'var(--green)':'var(--red)';
+
+  // ── Seletor de período ────────────────────────────────────────────────────
+  let periodoOpts = '';
+  for(let y=2027; y>=2026; y--){
+    for(let m=12; m>=1; m--){
+      const v=`${y}-${String(m).padStart(2,'0')}`;
+      periodoOpts+=`<option value="${v}" ${v===mes?'selected':''}>${MESES[m-1]} ${y}</option>`;
+    }
+  }
+
+  // ── Formata input de valor ────────────────────────────────────────────────
+  // formatCurrency já usa pt-BR (vírgula decimal)
+
+  const label = (txt) => `<div style="font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);margin-bottom:10px;display:flex;align-items:center;gap:10px"><span style="width:18px;height:1px;background:var(--terra);display:inline-block"></span>${txt}</div>`;
+
+  let h = `
+  <!-- SELETOR -->
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:28px">
+    <span style="font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3)">Período</span>
+    <select onchange="setFinPeriodo(this.value.split('-')[0],this.value.split('-')[1])" style="background:var(--bg2);border:1px solid var(--border);color:var(--text);font-family:'Raleway',sans-serif;font-size:12px;font-weight:700;padding:7px 14px;border-radius:4px;outline:none;cursor:pointer">${periodoOpts}</select>
+    <span style="font-size:13px;color:var(--text3)">${MESES[finMonth-1]} ${finYear}</span>
+  </div>
+
+  <!-- META MENSAL -->
+  ${label('Meta Mensal — '+MESES[finMonth-1]+' '+finYear)}
+  <div style="background:var(--bg2);border:1px solid ${meta===0?'var(--border)':metaAtingida?'rgba(93,202,165,0.25)':'rgba(226,75,74,0.25)'};border-radius:6px;padding:22px 28px;margin-bottom:28px;position:relative;overflow:hidden">
+    <div style="position:absolute;top:0;left:0;bottom:0;width:${metaPct}%;background:${metaAtingida?'rgba(93,202,165,0.04)':'rgba(226,75,74,0.04)'};pointer-events:none"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;position:relative">
+      <div>
+        <div style="font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);margin-bottom:6px">Meta do Mês</div>
+        <div style="font-size:30px;font-weight:900;letter-spacing:-1px;color:${metaCor};line-height:1">${formatCurrency(meta)}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:${metaCor};margin-bottom:4px">${meta===0?'Meta não definida':metaAtingida?'✓ Meta atingida':'✗ Abaixo da meta'}</div>
+        <div style="font-size:26px;font-weight:900;color:${metaCor}">${meta>0?metaPct+'%':'—'}</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:2px">${meta>0?formatCurrency(totalRecebido)+' recebido no mês':''}</div>
+      </div>
+    </div>
+    ${meta>0?`<div style="margin-top:14px;height:3px;background:var(--border);border-radius:2px;overflow:hidden"><div style="height:100%;width:${metaPct}%;background:${metaAtingida?'var(--green)':'var(--red)'};border-radius:2px"></div></div>`:''}
+  </div>
+
+  <!-- ACUMULADO ANUAL -->
+  ${label('Balanço Anual — '+finYear)}
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:28px">
+    <div style="background:var(--bg2);padding:20px 22px;border-top:2px solid var(--green)">
+      <div style="font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Receita Recebida</div>
+      <div style="font-size:28px;font-weight:900;letter-spacing:-1px;color:var(--green);margin-bottom:6px">${formatCurrency(receitaAnual)}</div>
+      <div style="font-size:12px;color:var(--text3)">${mesesComFatura} ${mesesComFatura===1?'mês':'meses'} com recebimento${metaAnual>0?` · ${metaAnualPct}% da meta anual`:''}</div>
+    </div>
+    <div style="background:var(--bg2);padding:20px 22px;border-top:2px solid var(--red)">
+      <div style="font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Despesas Anuais</div>
+      <div style="font-size:28px;font-weight:900;letter-spacing:-1px;color:var(--red);margin-bottom:6px">${formatCurrency(despesasAnual)}</div>
+      <div style="font-size:12px;color:var(--text3)">mensais × ${mesesPassados} meses + únicas do ano</div>
+    </div>
+    <div style="background:var(--bg2);padding:20px 22px;border-top:2px solid ${saldoAnual<0?'var(--red)':'var(--terra)'}">
+      <div style="font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Saldo Anual</div>
+      <div style="font-size:28px;font-weight:900;letter-spacing:-1px;color:${saldoAnual<0?'var(--red)':'var(--terra)'};margin-bottom:6px">${formatCurrency(saldoAnual)}</div>
+      <div style="font-size:12px;color:var(--text3)">Receita − Despesas acumuladas</div>
+    </div>
+  </div>
+
+  <!-- BALANÇO DO MÊS -->
+  ${label('Balanço do Mês — '+MESES[finMonth-1]+' '+finYear)}
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:32px">
+    <div style="background:var(--bg2);padding:22px 20px;border-top:2px solid var(--green)">
+      <div style="font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Recebido</div>
+      <div style="font-size:26px;font-weight:900;letter-spacing:-1px;color:var(--green);margin-bottom:8px">${formatCurrency(totalRecebido)}</div>
+      <div style="font-size:12px;color:var(--text3)">${recebido.length} cliente${recebido.length!==1?'s':''}</div>
+    </div>
+    <div style="background:var(--bg2);padding:22px 20px;border-top:2px solid var(--blue)">
+      <div style="font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">A Receber</div>
+      <div style="font-size:26px;font-weight:900;letter-spacing:-1px;color:var(--blue);margin-bottom:8px">${formatCurrency(totalAReceber)}</div>
+      <div style="font-size:12px;color:var(--text3)">${aReceber.length} cliente${aReceber.length!==1?'s':''}</div>
+    </div>
+    <div style="background:var(--bg2);padding:22px 20px;border-top:2px solid var(--red)">
+      <div style="font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Despesas</div>
+      <div style="font-size:26px;font-weight:900;letter-spacing:-1px;color:var(--red);margin-bottom:8px">${formatCurrency(despesasMes)}</div>
+      <div style="font-size:12px;color:var(--text3)">${(data.despesas||[]).length} item${(data.despesas||[]).length!==1?'s':''} cadastrado${(data.despesas||[]).length!==1?'s':''}</div>
+    </div>
+    <div style="background:var(--bg2);padding:22px 20px;border-top:2px solid ${saldoMes<0?'var(--red)':'var(--terra)'}">
+      <div style="font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Saldo do Mês</div>
+      <div style="font-size:26px;font-weight:900;letter-spacing:-1px;color:${saldoMes<0?'var(--red)':'var(--terra)'};margin-bottom:8px">${formatCurrency(saldoMes)}</div>
+      <div style="font-size:12px;color:var(--text3)">Recebido − Despesas</div>
+    </div>
+  </div>`;
+
+  // ── COBRANÇAS POR CLIENTE ─────────────────────────────────────────────────
+  h+=label('Cobranças — '+MESES[finMonth-1]+' '+finYear);
+  if(cliList.length){
+    const stCfg = {
+      pago:    {label:'Recebido',  cor:'var(--green)', bg:'rgba(93,202,165,0.08)',  brd:'rgba(93,202,165,0.2)'},
+      pendente:{label:'Pendente',  cor:'var(--blue)',  bg:'rgba(133,183,235,0.08)', brd:'rgba(133,183,235,0.2)'},
+      vencido: {label:'Vencido',   cor:'var(--red)',   bg:'rgba(226,75,74,0.08)',   brd:'rgba(226,75,74,0.2)'},
+    };
+    h+=`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:32px">
+      <table style="width:100%;border-collapse:collapse">
+        <thead><tr style="background:var(--bg3)">
+          <th style="padding:13px 18px;text-align:left;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Cliente</th>
+          <th style="padding:13px 18px;text-align:left;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Empresa</th>
+          <th style="padding:13px 18px;text-align:left;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Valor</th>
+          <th style="padding:13px 18px;text-align:left;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Recorrência</th>
+          <th style="padding:13px 18px;text-align:left;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Vence</th>
+          <th style="padding:13px 18px;text-align:left;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Status</th>
+          <th style="padding:13px 18px;text-align:left;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Data Pag.</th>
+          <th style="padding:13px 18px;border-bottom:1px solid var(--border)"></th>
+        </tr></thead><tbody>`;
+    cliList.forEach(c=>{
+      const fat = getFatura(c.id, mes);
+      const stKey = statusEfetivo(c.id, mes);
+      const stDisplay = stKey==='vencido-auto'?'vencido':stKey; // normaliza para exibição
+      const st = stCfg[stDisplay]||stCfg.pendente;
+      const ct2 = getContratoAtivo(c.id);
+      // Info do dia de vencimento
+      const diaVenc = ct2 ? ct2.diaVencimento : null;
+      const dataVencPag = diaVenc ? datVencPagamento(mes, diaVenc) : null;
+      const hoje2 = new Date().toISOString().slice(0,10);
+      const vencAuto = stKey==='vencido-auto';
+      const recLabel = ct2 ? ct2.recorrencia : '—';
+      const recKey = (recLabel||'').toLowerCase();
+      const recBadge = recKey.includes('mensal')?'var(--green)':recKey.includes('único')||recKey.includes('unico')?'var(--amber)':recKey.includes('trimestral')?'var(--blue)':recKey.includes('anual')?'#B07FEB':'var(--text2)';
+      const acoes = `<button class="btn btn-ghost" style="font-size:12px;padding:4px 10px;margin-right:4px" onclick="openEditFatura('${c.id}')">Editar</button>`
+        + (stDisplay==='pago'
+        ? `<button class="btn btn-ghost" style="font-size:12px;padding:4px 10px" onclick="marcarPendente('${c.id}')">Desfazer</button>`
+        : `<button class="btn" style="font-size:12px;padding:4px 10px;border-color:var(--green);color:var(--green)" onclick="marcarPago('${c.id}')">Marcar Pago</button>
+           ${!vencAuto?`<button class="btn btn-danger" style="font-size:12px;padding:4px 10px;margin-left:4px" onclick="marcarVencido('${c.id}')">Vencido</button>`:''}
+           ${vencAuto?`<button class="btn btn-ghost" style="font-size:12px;padding:4px 10px;margin-left:4px" onclick="marcarPendente('${c.id}')">Ignorar</button>`:''}
+          `);
+      h+=`<tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:15px 18px;font-size:13px;font-weight:700;color:var(--text)">${c.nome}</td>
+        <td style="padding:15px 18px;font-size:12px;color:var(--text2)">${c.empresa||'—'}</td>
+        <td style="padding:15px 18px;font-size:14px;font-weight:800;color:var(--terra)">${formatCurrency(efValor(c))}</td>
+        <td style="padding:15px 18px"><span style="font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:${recBadge};border:1px solid ${recBadge}44;padding:2px 8px;border-radius:2px">${recLabel}</span></td>
+        <td style="padding:15px 18px;font-size:12px;color:${vencAuto?'var(--red)':'var(--text2)'};font-weight:${vencAuto?'700':'400'}">
+          ${dataVencPag?`Dia ${String(diaVenc).padStart(2,'0')}${vencAuto?' ⚠':''}`:' —'}
+        </td>
+        <td style="padding:15px 18px">
+          <span style="font-size:13px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:${st.cor};background:${st.bg};border:1px solid ${st.brd};padding:3px 10px;border-radius:2px">${st.label}</span>
+          ${vencAuto?`<div style="font-size:13px;color:var(--red);margin-top:4px;font-weight:600">venceu em ${dataVencPag}</div>`:''}
+        </td>
+        <td style="padding:15px 18px;font-size:12px;color:var(--text2)">${fat&&fat.dataPagamento?fat.dataPagamento:'—'}</td>
+        <td style="padding:15px 18px;text-align:right;white-space:nowrap">${acoes}</td>
+      </tr>`;
+    });
+    h+=`</tbody></table></div>`;
+  } else {
+    h+=`<div class="empty-state" style="margin-bottom:32px"><div class="empty-icon">📄</div><div class="empty-text">Nenhum cliente ativo</div></div>`;
+  }
+
+  // ── DESPESAS ──────────────────────────────────────────────────────────────
+  // Exibe apenas despesas ativas (sem data_fim) + únicas do mês selecionado
+  const despesasVisiveis = (data.despesas||[]).filter(dep=>{
+    if(dep.periodo==='Mensal') return !dep.dataFim && dep.data && dep.data.slice(0,7)<=mes;
+    return dep.data && dep.data.startsWith(mes);
+  });
+
+  h+=label('Despesas');
+  if(despesasVisiveis.length){
+    h+=`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;overflow:hidden">
+      <table style="width:100%;border-collapse:collapse">
+        <thead><tr style="background:var(--bg3)">
+          <th style="padding:13px 18px;text-align:left;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Item</th>
+          <th style="padding:13px 18px;text-align:left;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Valor</th>
+          <th style="padding:13px 18px;text-align:left;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Período</th>
+          <th style="padding:13px 18px;text-align:left;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Categoria</th>
+          <th style="padding:13px 18px;text-align:left;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Desde</th>
+          <th style="padding:13px 18px;border-bottom:1px solid var(--border)"></th>
+        </tr></thead><tbody>`+
+      despesasVisiveis.map(dep=>`<tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:15px 18px;font-size:13px;font-weight:700;color:var(--text)">${dep.item}</td>
+        <td style="padding:15px 18px;font-size:14px;font-weight:800;color:var(--red)">${formatCurrency(dep.valor)}</td>
+        <td style="padding:15px 18px;font-size:12px;color:var(--text2)">${dep.periodo}</td>
+        <td style="padding:15px 18px;font-size:12px;color:var(--text2)">${dep.categoria||'—'}</td>
+        <td style="padding:15px 18px;font-size:12px;color:var(--text2)">${dep.data?new Date(dep.data+'T00:00:00').toLocaleDateString('pt-BR',{month:'short',year:'numeric'}):'—'}</td>
+        <td style="padding:15px 18px;text-align:right;white-space:nowrap;display:flex;gap:6px;justify-content:flex-end;align-items:center">
+          <button class="btn btn-ghost" style="font-size:12px;padding:4px 11px" onclick="openEditDespesa('${dep.id}')">Editar</button>
+          ${dep.periodo==='Mensal'
+            ? `<button class="btn btn-danger" style="font-size:12px;padding:4px 11px" onclick="encerrarDespesa('${dep.id}')">Encerrar</button>`
+            : `<button class="btn btn-danger" style="font-size:12px;padding:4px 11px" onclick="deleteExpense('${dep.id}')">Remover</button>`
+          }
+        </td>
+      </tr>`).join('')+
+      `</tbody></table></div>`;
+  } else {
+    h+=`<div class="empty-state"><div class="empty-icon">💸</div><div class="empty-text">Nenhuma despesa ativa neste período</div></div>`;
+  }
+
+  document.getElementById('main-content').innerHTML = h;
+}
+
+function openExpenseForm(){
+  modal(`<div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-divider"></div>
+    <div class="modal-title">Nova Despesa</div>
+    <div class="form-row"><label class="form-label">Item</label><input class="form-input" id="exp-item"></div>
+    <div class="form-row"><label class="form-label">Valor</label><input class="form-input" id="exp-valor" placeholder="0.00"></div>
+    <div class="form-row"><label class="form-label">Período</label><select class="form-input" id="exp-periodo"><option>Mensal</option><option>Único</option></select></div>
+    <div class="form-row"><label class="form-label">Categoria</label><input class="form-input" id="exp-cat"></div>
+    <div class="form-row"><label class="form-label">Data</label><input class="form-input" type="date" id="exp-data"></div>
+    <div class="form-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn" onclick="saveExpense()">Adicionar</button></div>
+  </div>`);
+}
+
+
+async function saveExpense(){
+  const payload={item:val('exp-item')||'Despesa',valor:parseFloat((val('exp-valor')||'0').replace(',','.'))||0,periodo:val('exp-periodo')||'Mensal',categoria:val('exp-cat')||'',data:val('exp-data')||new Date().toISOString().slice(0,10)};
+  const {data:row,error}=await sb.from('despesas').insert(payload).select().single();
+  if(error){ toast('Erro ao salvar despesa'); return; }
+  data.despesas.unshift(mapDespesa(row));
+  closeModal(); render();
+}
+function openEditFatura(clienteId){
+  const ct=getContratoAtivo(clienteId); if(!ct) return;
+  const mes=finMesStr();
+  const fat=getFatura(clienteId,mes);
+  const c=data.clientes.find(x=>x.id===clienteId);
+  modal(`<div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-divider"></div>
+    <div class="modal-title">Editar Cobrança</div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:20px">${c?c.nome:''} · ${MESES[finMonth-1]} ${finYear}</div>
+    <div class="form-row"><label class="form-label">Valor cobrado</label>
+      <input class="form-input" id="ef_valor" value="${fat?fat.valor:ct.valor}" placeholder="0.00">
+    </div>
+    <div class="form-row"><label class="form-label">Status</label>
+      <select class="form-input" id="ef_status">
+        <option value="pago" ${fat&&fat.status==='pago'?'selected':''}>Recebido</option>
+        <option value="pendente" ${!fat||fat.status==='pendente'?'selected':''}>Pendente</option>
+        <option value="vencido" ${fat&&fat.status==='vencido'?'selected':''}>Vencido</option>
+      </select>
+    </div>
+    <div class="form-row"><label class="form-label">Data de pagamento</label>
+      <input class="form-input" type="date" id="ef_datapag" value="${fat&&fat.dataPagamento?fat.dataPagamento:''}">
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn" onclick="saveEditFatura('${clienteId}')">Salvar</button>
+    </div>
+  </div>`);
+}
+
+async function saveEditFatura(clienteId){
+  const ct=getContratoAtivo(clienteId); if(!ct) return;
+  const mes=finMesStr();
+  const existing=getFatura(clienteId,mes);
+  const valor=parseFloat((val('ef_valor')||'0').replace(',','.'))||ct.valor;
+  const status=val('ef_status')||'pendente';
+  const dataPagamento=val('ef_datapag')||null;
+  const payload={cliente_id:clienteId,contrato_id:ct.id,mes,valor,status,data_pagamento:dataPagamento};
+  const {data:row,error}=await sb.from('faturas').upsert(payload,{onConflict:'cliente_id,mes'}).select().single();
+  if(error){ toast('Erro ao salvar cobrança'); return; }
+  if(existing) Object.assign(existing,mapFatura(row));
+  else data.faturas.push(mapFatura(row));
+  closeModal(); render(); toast('Cobrança atualizada','success');
+}
+
+function openEditDespesa(id){
+  const dep=data.despesas.find(x=>x.id===id); if(!dep) return;
+  modal(`<div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-divider"></div>
+    <div class="modal-title">Editar Despesa</div>
+    <div class="form-row"><label class="form-label">Item</label>
+      <input class="form-input" id="ed_item" value="${dep.item||''}">
+    </div>
+    <div class="form-row"><label class="form-label">Valor</label>
+      <input class="form-input" id="ed_valor" value="${dep.valor||''}">
+    </div>
+    <div class="form-row"><label class="form-label">Período</label>
+      <select class="form-input" id="ed_periodo">
+        <option ${dep.periodo==='Mensal'?'selected':''}>Mensal</option>
+        <option ${dep.periodo==='Único'?'selected':''}>Único</option>
+      </select>
+    </div>
+    <div class="form-row"><label class="form-label">Categoria</label>
+      <input class="form-input" id="ed_cat" value="${dep.categoria||''}">
+    </div>
+    <div class="form-row"><label class="form-label">Data de início</label>
+      <input class="form-input" type="date" id="ed_data" value="${dep.data||''}">
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn" onclick="saveEditDespesa('${id}')">Salvar</button>
+    </div>
+  </div>`);
+}
+
+async function saveEditDespesa(id){
+  const dep=data.despesas.find(x=>x.id===id); if(!dep) return;
+  const payload={item:val('ed_item')||dep.item,valor:parseFloat((val('ed_valor')||'0').replace(',','.'))||dep.valor,periodo:val('ed_periodo')||dep.periodo,categoria:val('ed_cat')||'',data:val('ed_data')||dep.data};
+  const {error}=await sb.from('despesas').update(payload).eq('id',id);
+  if(error){ toast('Erro ao atualizar despesa'); return; }
+  Object.assign(dep,{item:payload.item,valor:payload.valor,periodo:payload.periodo,categoria:payload.categoria,data:payload.data});
+  closeModal(); render(); toast('Despesa atualizada','success');
+}
+
+async function encerrarDespesa(id){
+  const dep = data.despesas.find(x=>x.id===id); if(!dep) return;
+  const hoje = new Date();
+  // encerra no último dia do mês atual
+  const ultimoDia = new Date(hoje.getFullYear(), hoje.getMonth()+1, 0).toISOString().slice(0,10);
+  const mesLabel = hoje.toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+  if(!confirm(`Encerrar "${dep.item}" ao final de ${mesLabel}?\n\nEla continuará aparecendo nos meses anteriores em que estava ativa.`)) return;
+  const {error}=await sb.from('despesas').update({data_fim:ultimoDia}).eq('id',id);
+  if(error){ toast('Erro ao encerrar despesa'); return; }
+  dep.dataFim=ultimoDia;
+  render(); toast('Despesa encerrada','success');
+}
+
+async function deleteExpense(id){
+  if(!confirm('Remover esta despesa?')) return;
+  const {error}=await sb.from('despesas').delete().eq('id',id);
+  if(error){ toast('Erro ao remover despesa'); return; }
+  data.despesas=data.despesas.filter(x=>x.id!==id); render();
+}
+
+// ─── NAVEGAÇÃO POR ENTER NOS FORMULÁRIOS ─────────────────────────────────────
+// Captura Enter em qualquer .form-input dentro do modal:
+//   - textarea → ignora (Enter deve criar nova linha)
+//   - campo normal → pula para o próximo input/select
+//   - último campo → clica no botão primário de submit
+document.addEventListener('keydown', function(e){
+  if(e.key !== 'Enter') return;
+  const el = e.target;
+  if(!el.classList.contains('form-input')) return;
+  if(el.tagName === 'TEXTAREA') return; // mantém comportamento padrão em textarea
+
+  const modal = document.querySelector('.modal');
+  if(!modal) return;
+  e.preventDefault();
+
+  // Todos os inputs e selects focáveis do modal (exceto textarea)
+  const fields = Array.from(modal.querySelectorAll('.form-input:not(textarea)'));
+  const idx = fields.indexOf(el);
+
+  if(idx >= 0 && idx < fields.length - 1){
+    // Próximo campo
+    const next = fields[idx + 1];
+    next.focus();
+    // Se for select, abre o dropdown apenas em desktop
+    if(next.tagName === 'SELECT') next.focus();
+  } else {
+    // Último campo — dispara o botão principal (não ghost, não danger)
+    const submitBtn = modal.querySelector('.form-actions .btn:not(.btn-ghost):not(.btn-danger)');
+    if(submitBtn) submitBtn.click();
+  }
+});
+
+// ─── BOOT ─────────────────────────────────────────────────────────────────────
+const sc=document.getElementById('sel-currency'); if(sc) sc.value=(data.currency||'BRL');
+const mi=document.getElementById('meta-input'); if(mi) mi.value=(data.metaMensal||'');
+// initData() é chamado pelo login (tentarLogin ou verificarSessao)
+</script>
+</body>
+</html>

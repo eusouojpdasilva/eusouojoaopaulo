@@ -1,0 +1,604 @@
+════════════════════════════════════════════════════════════════════════════════
+BRIEFING COMPLETO — CRM PARA AGÊNCIAS DE VIAGENS
+Para usar no início de uma nova sessão do Claude Code
+════════════════════════════════════════════════════════════════════════════════
+
+CONTEXTO DO PROJETO
+───────────────────
+Quero construir um CRM white-label para agências de viagens, para vender como
+produto SaaS. Já tenho um CRM de assessoria de marketing funcionando (JP CRM)
+e quero replicar a mesma arquitetura técnica e qualidade de código para o
+segmento de turismo.
+
+O produto final deve ser genérico o suficiente para qualquer agência de viagens,
+com o nome da agência configurável (white-label).
+
+⚠️ IMPORTANTE — DESIGN SYSTEM NOVO (NÃO reutilizar o JP CRM)
+──────────────────────────────────────────────────────────────
+CADA CLIENTE terá seu próprio design personalizado.
+NÃO copiar as cores, fontes nem visual do JP CRM (aquele é terracota/dark).
+
+Para este projeto, o Claude deve:
+  1. Perguntar ao usuário qual é o nome e identidade visual da agência
+     (logo, cores principais, estilo: moderno, luxo, aventura, família, etc.)
+  2. Criar um design system NOVO e exclusivo baseado nessa identidade
+  3. Usar a skill /frontend-design para garantir visual premium e original
+  4. As CSS variables (--primary, --bg, --text, etc.) devem refletir a marca
+
+O que REAPROVEITAR do JP CRM (apenas arquitetura e padrões):
+  ✓ Stack técnica (HTML único + Supabase CDN + Vercel)
+  ✓ Padrões de código (async/await, mappers, cache local, toast, login)
+  ✓ Estrutura de módulos (tabs, kanban, modais, formulários)
+  ✓ Funcionalidades UX (Enter nos campos, sessão por aba, commits automáticos)
+  ✓ Padrões financeiros avançados (ver seção PADRÕES DE CÓDIGO abaixo)
+  ✗ Cores, fontes, visual — tudo novo por cliente
+
+STACK TÉCNICA (igual ao projeto anterior — não mudar)
+──────────────────────────────────────────────────────
+- Arquivo único: index.html (sem frameworks, sem build)
+- Supabase JS SDK via CDN: <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+- Deploy: GitHub + Vercel (estático, zero config)
+- Sem Node.js, sem npm, sem bundler
+- Toda lógica em JavaScript vanilla dentro do <script>
+
+DESIGN SYSTEM (criar do zero para cada cliente)
+────────────────────────────────────────────────
+Antes de começar o código, o Claude DEVE perguntar:
+
+  "Qual é o nome da agência?"
+  "Qual é o estilo visual desejado?
+    (ex: luxo/premium, aventura/natureza, família/colorido, moderno/minimalista)"
+  "Tem alguma cor de marca definida? (se sim, qual o hex)"
+  "Prefere tema claro, escuro ou um dos dois?"
+
+Com base nas respostas, criar um design system original:
+
+  Princípios que devem SEMPRE ser mantidos (independente do estilo):
+  - CSS variables bem definidas para todas as cores e espaçamentos
+  - Tipografia hierárquica clara (heading / body / label / caption)
+  - Cards com hover interativo (translateY + shadow)
+  - Topbar sticky com blur
+  - Stats em grid com valores destacados em font-weight 800+
+  - Modais elegantes com animação de entrada
+  - Badges coloridos por status/tipo
+  - Estados de loading e empty state
+  - Toast de feedback (success/error)
+  - Design responsivo (mobile-first)
+  - Usar skill /frontend-design para garantir qualidade premium
+
+  Exemplos de direções possíveis:
+  - Luxo → dark profundo, dourado/champanhe, sans-serif elegante
+  - Aventura → verde floresta/terra, fonte bold, texturas naturais
+  - Família → claro, cores vibrantes, fonte arredondada, acolhedor
+  - Moderno → branco/cinza, azul/violeta, tipografia geométrica
+  - Praia/Resort → azul turquesa, branco, leve, arejado
+
+PADRÕES DE CÓDIGO (obrigatórios em todo o projeto)
+────────────────────────────────────────────────────
+
+1. SUPABASE — inicialização:
+   const SUPABASE_URL = 'A_PREENCHER';
+   const SUPABASE_KEY = 'A_PREENCHER';
+   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+2. FIELD MAPPING (DB snake_case → JS camelCase):
+   const mapTabela = r => ({ id:r.id, campoJs:r.campo_db, ... });
+
+   Exemplo real do mapeamento de contratos/parcelas:
+   const mapContrato = r => ({
+     id:r.id, clienteId:r.cliente_id, valor:r.valor,
+     recorrencia:r.recorrencia, dataInicio:r.data_inicio,
+     vencimento:r.vencimento, status:r.status, moeda:r.moeda,
+     diaVencimento:r.dia_vencimento||null,
+     numParcelas:r.num_parcelas||null    // só para recorrência Parcelado
+   });
+   const mapDespesa = r => ({
+     id:r.id, item:r.item, valor:r.valor, periodo:r.periodo,
+     categoria:r.categoria, data:r.data,
+     dataFim:r.data_fim||null            // null = ativa; data = encerrada
+   });
+
+3. CACHE LOCAL (runtime):
+   let data = { tabela1:[], tabela2:[], ... };
+   — Carregar tudo na inicialização com Promise.all
+   — Cada mutation atualiza Supabase E o cache local
+   — Re-render após cada mutation (sem reload de página)
+
+4. INIT PATTERN:
+   async function initData(){
+     showLoading();
+     const [t1, t2] = await Promise.all([
+       sb.from('tabela1').select('*').order('created_at',{ascending:false}),
+       sb.from('tabela2').select('*'),
+     ]);
+     data.tabela1 = (t1.data||[]).map(mapTabela1);
+     // ...
+     render();
+   }
+
+5. TOAST de feedback:
+   function toast(msg, type='error'){
+     // type: 'error' (vermelho) | 'success' (verde)
+     // aparece bottom-right, some em 3.5s
+   }
+
+6. MODALS:
+   function modal(inner){ document.getElementById('modal-root').innerHTML=`<div class="modal-overlay"...>${inner}</div>`; }
+   function closeModal(){ document.getElementById('modal-root').innerHTML=''; }
+
+7. IDs são UUIDs do Supabase — SEMPRE usar aspas nos onclick:
+   onclick="minhaFuncao('${item.id}')"  ← CORRETO
+   onclick="minhaFuncao(${item.id})"    ← ERRADO (quebra com UUID)
+
+8. ENTER nos formulários — listener global único:
+   document.addEventListener('keydown', function(e){
+     if(e.key!=='Enter') return;
+     if(!e.target.classList.contains('form-input')) return;
+     if(e.target.tagName==='TEXTAREA') return;
+     const modal=document.querySelector('.modal');
+     if(!modal) return;
+     e.preventDefault();
+     const fields=Array.from(modal.querySelectorAll('.form-input:not(textarea)'));
+     const idx=fields.indexOf(e.target);
+     if(idx<fields.length-1) fields[idx+1].focus();
+     else modal.querySelector('.form-actions .btn:not(.btn-ghost):not(.btn-danger)')?.click();
+   });
+
+9. LOGIN SCREEN (senha simples):
+   const SENHA = '1949'; // configurável
+   — sessionStorage para sessão por aba
+   — Animação shake no erro
+   — Auto-focus no campo ao carregar
+
+10. META/MOEDA em localStorage (não vai pro Supabase):
+    const META_KEY = 'crm_meta';
+    function loadMeta(){ ... }
+    function persistMeta(){ ... }
+
+11. VERIFICAÇÃO DE SINTAXE antes de cada commit:
+    node -e "const fs=require('fs');const html=fs.readFileSync('index.html','utf8');
+    const scripts=[...html.matchAll(/<script(?![^>]*src)[^>]*>([\s\S]*?)<\/script>/g)].map(m=>m[1]);
+    scripts.forEach((s,i)=>{try{new Function(s);}catch(e){console.error('Erro:',e.message);}});"
+
+12. COMMIT E PUSH — o Claude faz automaticamente quando pedido:
+    git add index.html && git commit -m "mensagem" && git push origin main
+
+13. RECORRÊNCIA "PARCELADO" (padrão financeiro avançado):
+    Tipos de recorrência suportados: Mensal | Trimestral | Anual | Pagamento Único | Parcelado
+
+    — Quando recorrência = "Parcelado", exibir seção extra no formulário:
+        • Campo "Valor total do serviço" (ex: R$ 3.000)
+        • Campo "Nº de parcelas" (ex: 3)
+        • Cálculo automático: valor_parcela = total / n
+        • Cálculo automático: data de vencimento = dataInicio + (n-1) meses
+        • Exibir preview: "3x de R$ 1.000,00 = R$ 3.000,00 no total"
+    — Salvar no DB: valor = parcela_mensal, num_parcelas = n
+    — Exibição no card do cliente: "Parcelado 3x"
+
+    Função helper de UI:
+    function _parceladoSection(numParcelas, valor){
+      // retorna HTML da seção, oculta por padrão (display:none)
+      // visível apenas quando recorrência === 'Parcelado'
+    }
+    window._chkRec = function(){
+      // mostra/oculta seção parcelado conforme select de recorrência
+    };
+    window._calcParc = function(){
+      // recalcula valor e data de vencimento ao alterar total ou nº parcelas
+    };
+
+14. DIA FIXO DE VENCIMENTO (padrão financeiro avançado):
+    — Contratos/parcelas têm campo diaVencimento (1–31) no DB: dia_vencimento
+    — Ao exibir lista de cobranças, calcular a data real de vencimento no mês:
+        function datVencPagamento(mes, diaVenc){
+          // 'YYYY-MM' + dia → 'YYYY-MM-DD'
+          // ajusta para o último dia do mês quando dia > dias disponíveis
+          // ex: dia 31 em fevereiro → 28 (ou 29 em ano bissexto)
+        }
+    — Helper de select de dia: selectDiaVencimento(selected) → <select> com dias 1-31
+
+15. STATUS EFETIVO DE COBRANÇA (padrão financeiro avançado):
+    — Não salvar "vencido" no banco a cada virada de dia — calcular em runtime:
+        function statusEfetivo(clienteId, mes){
+          const fat = getFatura(clienteId, mes);
+          if(fat) return fat.status; // status explícito salvo pelo usuário
+          // se não há fatura salva, verifica vencimento automático:
+          // diaVencimento passado e sem pagamento → 'vencido-auto'
+          // caso contrário → 'pendente'
+        }
+    — Na exibição, normalizar 'vencido-auto' → 'vencido' (mesmo visual, sem gravar no DB)
+    — Isso evita jobs de atualização em batch e mantém o DB limpo
+
+16. isCobravel (padrão financeiro avançado):
+    — Determinar se um contrato gera cobrança em determinado mês:
+        function isCobravel(ct, mes){
+          // Mensal / Parcelado → todo mês dentro do período
+          // Trimestral → a cada 3 meses a partir de dataInicio
+          // Anual → 1× por ano no mês de dataInicio
+          // Pagamento Único → SOMENTE no mês de dataInicio
+          // Fora do período (antes de dataInicio ou após vencimento) → false
+        }
+    — Usar em: lista de cobranças do mês, KPIs de recebimento, alertas de parcelas
+
+17. dataFim EM DESPESAS (soft-delete de recorrentes):
+    — Despesas mensais NÃO são excluídas do banco; recebem uma data_fim
+    — Regra de exibição por mês:
+        Mensal  → aparece se data (início) <= mes E (dataFim ausente OU dataFim >= mes)
+        Único   → aparece somente no mês exato da data
+    — Ao "excluir" uma despesa mensal, gravar data_fim = último dia do mês atual
+    — Isso preserva histórico e calcula despesas passadas corretamente
+
+18. DASHBOARD ANALÍTICO (aba inicial):
+    — KPIs em grid 4 colunas: leads ativos, em proposta, clientes ativos, receita do mês
+    — Funil de conversão: barras de progresso por estágio com contagem e %
+    — Gráfico de leads por dia da semana (barras simples em HTML/CSS, sem biblioteca)
+    — SLA de Follow-up: contadores de "Em dia / Vencido / Sem data" + barra de % saúde
+    — Fila de Risco: leads abertos com follow-up vencido, ordenados por atraso (em dias)
+    — Layout em grid 2 colunas para os painéis analíticos
+
+
+ESTRUTURA DE MÓDULOS — CRM AGÊNCIA DE VIAGENS
+──────────────────────────────────────────────
+
+ABA 0 — DASHBOARD (painel inicial)
+  KPIs do mês: leads ativos, em cotação, clientes/reservas ativos, receita de comissões
+  Funil de conversão de leads (por etapa com % e barra)
+  Gráfico de leads por dia da semana (HTML/CSS puro, sem bibliotecas)
+  SLA de Follow-up: em dia / vencido / sem data + barra de % saúde
+  Fila de Risco: leads sem retorno com follow-up vencido (dias de atraso)
+
+ABA 1 — PIPELINE
+  Kanban com colunas: Novo Lead → Cotação → Proposta Enviada → Reservado → Concluído | Cancelado
+  Cards com: destino de interesse, período, nº de passageiros, orçamento estimado
+  Botão "Gerar Cotação →" nos leads em Proposta para criar uma Reserva
+  Badge de tipo: Lua de Mel | Família | Aventura | Negócios | Cruzeiro | Grupos
+
+ABA 2 — CLIENTES (Viajantes)
+  Dados pessoais: nome, empresa, email, WhatsApp, Instagram
+  Documentos: CPF, passaporte (número + validade), data de nascimento
+  Localização: cidade / estado / país
+  Preferências: classe aérea, tipo de hotel, regime alimentar, acomodação
+  Histórico de viagens (reservas vinculadas)
+  Alerta automático: passaporte vencendo em menos de 6 meses
+  Alerta: aniversário do cliente (oportunidade de venda)
+
+ABA 3 — RESERVAS (módulo central)
+  Dados da viagem:
+    - Destino(s), datas de ida e volta
+    - Tipo: Pacote | Só Aéreo | Só Hotel | Cruzeiro | Rodoviário | Transfer
+    - Nº de passageiros adultos / crianças
+    - Status: Cotação → Confirmado → Pago → Em Viagem → Concluído | Cancelado
+  Financeiro da reserva:
+    - Valor total cobrado ao cliente
+    - Custo (repasse aos fornecedores)
+    - Comissão da agência (valor total - custo)
+    - Margem %
+    - Parcelas do cliente (quantidade, valor, datas, status pago/pendente/vencido)
+    - Recorrência de pagamento: Mensal | Parcelado | Pagamento Único (ver padrão 13)
+    - Dia fixo de vencimento das parcelas (ver padrão 14)
+    - Status efetivo calculado em runtime, sem gravar "vencido" no banco (ver padrão 15)
+  Fornecedores utilizados (multi: hotel + aéreo + transfer + seguro)
+  Prazo de cancelamento sem multa (alerta automático)
+  Passageiros vinculados (lista dos clientes na reserva)
+  Documentos: número de reserva, localizador, voucher
+  Botão Editar disponível diretamente na lista de reservas e na lista de parcelas
+
+ABA 4 — FORNECEDORES
+  Tipo: Hotel | Operadora | Companhia Aérea | Locadora | Seguro | Transfer | Outro
+  Contato comercial
+  % de comissão padrão
+  Prazo de cancelamento sem multa (dias antes)
+  Destinos/rotas que operam
+  Histórico de reservas utilizando este fornecedor
+
+ABA 5 — FINANCEIRO
+  Período selecionável (mês/ano)
+  Balanço anual acumulado
+  Cards do mês:
+    - Receita (comissões de reservas concluídas)
+    - A Receber (comissões confirmadas ainda não recebidas)
+    - Despesas operacionais
+    - Saldo do mês
+  Meta mensal com barra de progresso
+  Tabela de comissões por reserva no período
+  Tabela de parcelas de clientes (vencendo / vencidas / pagas)
+    - Status calculado em runtime via statusEfetivo() (padrão 15)
+    - Data de vencimento calculada via datVencPagamento() (padrão 14)
+    - Botão Editar disponível em cada linha da tabela de cobranças
+  Alertas de parcelas vencidas automaticamente por dia de vencimento
+  Despesas da agência (ferramentas, aluguel, etc.)
+    - Despesas mensais com data_fim para encerramento sem perda de histórico (padrão 17)
+    - Botão Editar disponível em cada despesa
+    - Despesas mensais só aparecem a partir do mês de inclusão
+
+ABA 6 — ALERTAS (painel de avisos automáticos)
+  🛂 Passaportes vencendo em menos de 6 meses
+  ✈️ Viagens saindo nos próximos 7 dias
+  ⏰ Prazos de cancelamento se aproximando (< 72h)
+  💳 Parcelas de clientes vencendo hoje/amanhã
+  🎂 Aniversários desta semana (oportunidade de venda)
+  📋 Reservas sem pagamento confirmado
+
+
+SCHEMA SUPABASE — SQL COMPLETO
+────────────────────────────────
+Rodar no SQL Editor do Supabase na ordem abaixo:
+
+-- 1. CLIENTES (viajantes)
+create table clientes (
+  id uuid primary key default gen_random_uuid(),
+  nome text not null,
+  email text,
+  whatsapp text,
+  instagram text,
+  empresa text,
+  cpf text,
+  passaporte text,
+  passaporte_validade date,
+  data_nascimento date,
+  cidade text,
+  estado text,
+  pais text default 'Brasil',
+  classe_aerea text default 'Econômica',
+  tipo_hotel text,
+  regime_alimentar text,
+  preferencias text,
+  como_conheceu text,
+  observacao text,
+  status text default 'Ativo',
+  av text,
+  created_at timestamptz default now()
+);
+
+-- 2. FORNECEDORES
+create table fornecedores (
+  id uuid primary key default gen_random_uuid(),
+  nome text not null,
+  tipo text, -- Hotel | Operadora | Aérea | Locadora | Seguro | Transfer | Outro
+  contato_nome text,
+  contato_email text,
+  contato_whatsapp text,
+  comissao_pct numeric default 0,
+  prazo_cancelamento_dias integer,
+  destinos text,
+  observacao text,
+  status text default 'Ativo',
+  created_at timestamptz default now()
+);
+
+-- 3. LEADS
+create table leads (
+  id uuid primary key default gen_random_uuid(),
+  nome text not null,
+  whatsapp text,
+  email text,
+  destino_interesse text,
+  periodo_pretendido text,
+  tipo_viagem text, -- Lua de Mel | Família | Aventura | Negócios | Cruzeiro | Grupos
+  num_passageiros integer default 1,
+  orcamento_estimado numeric,
+  status text default 'novo', -- novo | cotacao | proposta | reservado | concluido | cancelado
+  origem text, -- indicação | instagram | google | site | feiras | outro
+  followup date,  -- data do próximo follow-up (usado no Dashboard SLA)
+  obs text,
+  contato_data text,
+  cliente_id uuid references clientes(id) on delete set null,
+  reserva_id uuid, -- será preenchido ao converter
+  created_at timestamptz default now()
+);
+
+-- 4. RESERVAS (central)
+create table reservas (
+  id uuid primary key default gen_random_uuid(),
+  codigo text, -- número da reserva (ex: RES-001)
+  cliente_id uuid references clientes(id) on delete set null,
+  lead_id uuid references leads(id) on delete set null,
+  destino text not null,
+  destinos_multiplos text, -- para roteiros com vários destinos
+  tipo text, -- Pacote | Aéreo | Hotel | Cruzeiro | Rodoviário | Transfer
+  data_ida date,
+  data_volta date,
+  num_adultos integer default 1,
+  num_criancas integer default 0,
+  status text default 'cotacao', -- cotacao | confirmado | pago | em_viagem | concluido | cancelado
+  valor_total numeric default 0,
+  custo_total numeric default 0,
+  comissao numeric generated always as (valor_total - custo_total) stored,
+  margem_pct numeric generated always as (
+    case when valor_total > 0 then round(((valor_total - custo_total)/valor_total)*100, 2) else 0 end
+  ) stored,
+  localizador text,
+  prazo_cancelamento date,
+  observacao text,
+  created_at timestamptz default now()
+);
+
+-- 5. PASSAGEIROS DA RESERVA (N clientes por reserva)
+create table reserva_passageiros (
+  id uuid primary key default gen_random_uuid(),
+  reserva_id uuid references reservas(id) on delete cascade,
+  cliente_id uuid references clientes(id) on delete cascade,
+  tipo text default 'Adulto' -- Adulto | Criança | Bebê
+);
+
+-- 6. ITENS DA RESERVA (serviços incluídos)
+create table reserva_itens (
+  id uuid primary key default gen_random_uuid(),
+  reserva_id uuid references reservas(id) on delete cascade,
+  fornecedor_id uuid references fornecedores(id) on delete set null,
+  tipo text, -- Aéreo | Hotel | Transfer | Seguro | Passeio | Outro
+  descricao text,
+  valor_custo numeric default 0,
+  valor_venda numeric default 0,
+  status text default 'pendente', -- pendente | confirmado | cancelado
+  localizador text,
+  created_at timestamptz default now()
+);
+
+-- 7. PARCELAS (pagamentos do cliente)
+create table parcelas (
+  id uuid primary key default gen_random_uuid(),
+  reserva_id uuid references reservas(id) on delete cascade,
+  cliente_id uuid references clientes(id) on delete cascade,
+  numero integer,
+  valor numeric not null,
+  data_vencimento date,
+  data_pagamento date,
+  status text default 'pendente', -- pendente | pago | vencido
+  forma_pagamento text, -- PIX | Cartão | Transferência | Dinheiro
+  observacao text,
+  -- campos para recorrência avançada:
+  recorrencia text default 'Parcelado', -- Mensal | Parcelado | Pagamento Único
+  dia_vencimento integer,               -- dia fixo (1-31) para calcular vencimento por mês
+  num_parcelas integer                  -- total de parcelas (quando recorrência = Parcelado)
+);
+
+-- 8. COMISSÕES (o que a agência recebe dos fornecedores)
+create table comissoes (
+  id uuid primary key default gen_random_uuid(),
+  reserva_id uuid references reservas(id) on delete cascade,
+  fornecedor_id uuid references fornecedores(id) on delete set null,
+  valor numeric not null,
+  data_prevista date,
+  data_recebimento date,
+  status text default 'pendente', -- pendente | recebido | cancelado
+  observacao text
+);
+
+-- 9. DESPESAS OPERACIONAIS
+create table despesas (
+  id uuid primary key default gen_random_uuid(),
+  item text not null,
+  valor numeric,
+  periodo text, -- Mensal | Único
+  categoria text,
+  data date,      -- data de início (ou data única)
+  data_fim date,  -- null = ativa; preenchida = encerrada (soft-delete para mensais)
+  created_at timestamptz default now()
+);
+
+-- 10. ALERTAS (gerados automaticamente ou manuais)
+create table alertas (
+  id uuid primary key default gen_random_uuid(),
+  tipo text, -- passaporte | aniversario | cancelamento | parcela | viagem
+  titulo text,
+  descricao text,
+  cliente_id uuid references clientes(id) on delete cascade,
+  reserva_id uuid references reservas(id) on delete cascade,
+  data_alerta date,
+  lido boolean default false,
+  created_at timestamptz default now()
+);
+
+-- RLS POLICIES (rodar depois das tabelas)
+alter table clientes enable row level security;
+alter table fornecedores enable row level security;
+alter table leads enable row level security;
+alter table reservas enable row level security;
+alter table reserva_passageiros enable row level security;
+alter table reserva_itens enable row level security;
+alter table parcelas enable row level security;
+alter table comissoes enable row level security;
+alter table despesas enable row level security;
+alter table alertas enable row level security;
+
+create policy "allow_all" on clientes for all to anon using (true) with check (true);
+create policy "allow_all" on fornecedores for all to anon using (true) with check (true);
+create policy "allow_all" on leads for all to anon using (true) with check (true);
+create policy "allow_all" on reservas for all to anon using (true) with check (true);
+create policy "allow_all" on reserva_passageiros for all to anon using (true) with check (true);
+create policy "allow_all" on reserva_itens for all to anon using (true) with check (true);
+create policy "allow_all" on parcelas for all to anon using (true) with check (true);
+create policy "allow_all" on comissoes for all to anon using (true) with check (true);
+create policy "allow_all" on despesas for all to anon using (true) with check (true);
+create policy "allow_all" on alertas for all to anon using (true) with check (true);
+
+
+FLUXO PRINCIPAL DO SISTEMA
+────────────────────────────
+
+Lead entra (indicação/instagram/google)
+  ↓
+Pipeline Kanban — qualifica o interesse
+  ↓
+Gera Cotação → cria Reserva em status "cotação"
+  ↓
+Envia proposta → status "confirmado"
+  ↓
+Cliente paga → gera Parcelas → status "pago"
+  ↓
+Viagem acontece → status "em_viagem"
+  ↓
+Volta → status "concluído" → Comissão registrada
+  ↓
+Financeiro atualizado automaticamente
+
+
+WHITE-LABEL — CONFIGURAÇÕES POR AGÊNCIA
+─────────────────────────────────────────
+No topo do <script>, variáveis configuráveis:
+
+const AGENCIA = {
+  nome: 'Nome da Agência',
+  slogan: 'Slogan aqui',
+  cor_primaria: '#C26B3A', // trocar para a cor da marca
+  senha: '1234',
+  moeda: 'BRL',
+  whatsapp: '5511999999999',
+};
+
+O design deve usar AGENCIA.cor_primaria no lugar de --terra,
+e AGENCIA.nome no lugar de "JP CRM".
+
+
+INSTRUÇÕES PARA COMEÇAR A NOVA SESSÃO
+────────────────────────────────────────
+
+1. Criar pasta: "CRM Agencia de Viagens" no diretório de projetos
+
+2. NÃO copiar o index.html do JP CRM inteiro — apenas usar como referência
+   de padrões de código. O design será criado do zero.
+   Referência em: C:\Meus Projetos\Eu Sou o JP\Projetos no Claude Code\CRM Projetos e Clientes\index.html
+
+3. Criar repositório GitHub com o nome da agência (ex: "crm-agencia-turismo")
+
+4. Criar projeto Supabase com o nome da agência
+
+5. Rodar o SQL Schema acima no Supabase SQL Editor
+
+6. O Claude deve na ordem:
+   a) Perguntar sobre a identidade visual da agência
+   b) Propor o design system (cores, fontes, estilo) e aguardar aprovação
+   c) Construir o index.html do zero com o novo design + módulos de viagem
+   d) Usar os padrões de código do JP CRM (async/await, mappers, toast, etc.)
+   e) Implementar os padrões financeiros avançados (padrões 13–18 acima)
+   f) Fazer commits automáticos a cada feature concluída
+
+
+PROMPT INICIAL PARA A NOVA SESSÃO
+────────────────────────────────────
+Cole este texto ao iniciar a nova sessão:
+
+"Vamos construir um CRM white-label para agências de viagens —
+um produto que vou vender para diferentes agências, cada uma com
+seu próprio design personalizado.
+
+Tenho um CRM anterior (JP CRM) como referência de arquitetura e padrões
+de código — mas o design será criado do zero para cada cliente.
+
+O projeto usa: HTML único, Supabase via CDN, GitHub + Vercel.
+Sem frameworks, sem build, sem npm.
+
+Segue o briefing completo com a estrutura, schema Supabase e padrões técnicos:
+
+[COLE O CONTEÚDO DESTE ARQUIVO AQUI]
+
+Antes de começar o código, me pergunta sobre a identidade visual
+da agência para criar o design system personalizado."
+
+
+════════════════════════════════════════════════════════════════════════════════
+FIM DO BRIEFING
+Arquivo atualizado em: 2026-06-03
+Projeto base: JP CRM (C:\Meus Projetos\Eu Sou o JP\Projetos no Claude Code\CRM Projetos e Clientes)
+════════════════════════════════════════════════════════════════════════════════

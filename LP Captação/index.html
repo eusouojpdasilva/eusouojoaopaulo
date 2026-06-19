@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Sistema com IA para agentes e agências de viagens atenderem, qualificarem e organizarem leads sem depender de improviso.">
+  <title>João Paulo da Silva | IA para Agentes de Viagens</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,300;0,400;0,600;0,700;0,800;1,300;1,400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #0b0b0b;
+      --bg-soft: #111213;
+      --panel: #171717;
+      --panel-light: #1d1d1d;
+      --terra: #c26b3a;
+      --terra-soft: rgba(194, 107, 58, .1);
+      --white: #fff;
+      --off: #efefef;
+      --muted: #a9a9a9;
+      --dim: #6f6f6f;
+      --line: #292929;
+      --ease: cubic-bezier(.16, 1, .3, 1);
+      --wrap: 1180px;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      background: var(--bg);
+    }
+
+    body {
+      min-width: 320px;
+      overflow-x: hidden;
+      background: var(--bg);
+      color: var(--white);
+      font-family: "Raleway", Arial, sans-serif;
+      font-weight: 300;
+      text-rendering: geometricPrecision;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 99;
+      pointer-events: none;
+      opacity: .13;
+      mix-blend-mode: overlay;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.72' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    section,
+    footer {
+      position: relative;
+    }
+
+    .wrap {
+      width: min(100% - 112px, var(--wrap));
+      margin: 0 auto;
+    }
+
+    .hero {
+      min-height: 740px;
+      height: 100svh;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      text-align: center;
+      background:
+        radial-gradient(ellipse at center, rgba(194, 107, 58, .34) 0%, rgba(32, 18, 11, .62) 34%, rgba(11, 11, 11, 1) 72%),
+        linear-gradient(180deg, #0b0b0b 0%, #170f0b 58%, #0b0b0b 100%);
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 35%;
+      background: linear-gradient(180deg, transparent 0%, rgba(194, 107, 58, .08) 42%, transparent 100%);
+    }
+
+    .hero-inner {
+      position: relative;
+      z-index: 1;
+      width: min(100% - 40px, 760px);
+      padding-top: 18px;
+    }
+
+    .hero h1,
+    .section-title,
+    .cta-title,
+    .footer-title {
+      font-weight: 800;
+      letter-spacing: 0;
+      color: var(--off);
+    }
+
+    .hero h1 {
+      font-size: clamp(3rem, 8.2vw, 7rem);
+      line-height: .9;
+      margin-bottom: 30px;
+    }
+
+    em {
+      color: var(--terra);
+      font-style: italic;
+      font-weight: 300;
+    }
+
+    .hero h1 em {
+      display: inline-block;
+      font-size: .78em;
+      line-height: 1;
+    }
+
+    .hero-problem {
+      width: min(100%, 590px);
+      margin: 0 auto 26px;
+      color: rgba(255, 255, 255, .48);
+      font-size: clamp(.96rem, 1.35vw, 1.08rem);
+      line-height: 1.75;
+    }
+
+    .hero-promise {
+      width: min(100%, 620px);
+      margin: 0 auto 34px;
+      color: var(--white);
+      font-size: clamp(1rem, 1.45vw, 1.22rem);
+      font-weight: 700;
+      line-height: 1.6;
+    }
+
+    .hero-actions {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    .button,
+    .ghost-link {
+      min-height: 48px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .66rem;
+      font-weight: 800;
+      letter-spacing: .28em;
+      text-transform: uppercase;
+      transition: background .25s, color .25s, border-color .25s, transform .25s;
+    }
+
+    .button {
+      border: 1px solid var(--terra);
+      color: var(--terra);
+      padding: 0 28px;
+    }
+
+    .button:hover,
+    .button:focus-visible {
+      background: var(--terra);
+      color: var(--bg);
+      transform: translateY(-1px);
+    }
+
+    .ghost-link {
+      color: var(--muted);
+      letter-spacing: 0;
+      text-transform: none;
+      font-size: .92rem;
+      font-weight: 400;
+    }
+
+    .ghost-link:hover,
+    .ghost-link:focus-visible {
+      color: var(--white);
+    }
+
+    .section {
+      padding: 132px 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .section.dark {
+      background: var(--bg);
+    }
+
+    .section.soft {
+      background: var(--bg-soft);
+    }
+
+    .section-head {
+      width: min(100%, 780px);
+      margin: 0 auto 68px;
+      text-align: center;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      margin-bottom: 28px;
+      color: var(--terra);
+      font-size: .58rem;
+      font-weight: 800;
+      letter-spacing: .38em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before,
+    .eyebrow::after {
+      content: "";
+      width: 34px;
+      height: 1px;
+      background: var(--terra);
+    }
+
+    .section-title {
+      font-size: clamp(2.35rem, 5.2vw, 5rem);
+      line-height: .94;
+    }
+
+    .section-intro {
+      width: min(100%, 620px);
+      margin: 22px auto 0;
+      color: var(--muted);
+      font-size: clamp(.96rem, 1.35vw, 1.08rem);
+      line-height: 1.75;
+    }
+
+    .system-grid,
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      background: var(--line);
+    }
+
+    .system-card,
+    .step-card {
+      min-height: 255px;
+      position: relative;
+      overflow: hidden;
+      background: var(--bg-soft);
+      padding: 48px 30px 42px;
+      text-align: center;
+      transition: background .3s var(--ease), transform .3s var(--ease);
+    }
+
+    .section.dark .step-card {
+      background: var(--bg);
+    }
+
+    .system-card:hover,
+    .step-card:hover {
+      background: var(--panel);
+    }
+
+    .system-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 30px;
+      height: 30px;
+      border-top: 2px solid var(--terra);
+      border-left: 2px solid var(--terra);
+      opacity: 0;
+      transition: opacity .3s;
+    }
+
+    .system-card:hover::before {
+      opacity: 1;
+    }
+
+    .big-number {
+      position: absolute;
+      top: 22px;
+      right: 22px;
+      color: var(--terra);
+      font-size: 5.4rem;
+      font-weight: 800;
+      line-height: 1;
+      opacity: .08;
+      pointer-events: none;
+    }
+
+    .card-index,
+    .step-index {
+      display: block;
+      margin-bottom: 22px;
+      color: var(--terra);
+      font-size: .58rem;
+      font-weight: 800;
+      letter-spacing: .34em;
+      text-transform: uppercase;
+    }
+
+    .system-card h3,
+    .step-card h3 {
+      position: relative;
+      z-index: 1;
+      margin-bottom: 12px;
+      color: var(--white);
+      font-size: 1.1rem;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+
+    .system-card p,
+    .step-card p {
+      position: relative;
+      z-index: 1;
+      color: var(--muted);
+      font-size: .93rem;
+      line-height: 1.75;
+    }
+
+    .step-card {
+      min-height: 240px;
+      padding-top: 54px;
+    }
+
+    .step-ghost {
+      position: absolute;
+      right: 14px;
+      bottom: -16px;
+      color: var(--line);
+      font-size: 6.8rem;
+      font-weight: 800;
+      line-height: .9;
+      pointer-events: none;
+      transition: color .3s;
+    }
+
+    .step-card:hover .step-ghost {
+      color: rgba(194, 107, 58, .15);
+    }
+
+    .fit-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: var(--line);
+    }
+
+    .fit-card {
+      background: var(--bg-soft);
+      padding: 56px 52px;
+    }
+
+    .fit-card.no {
+      background: var(--panel);
+    }
+
+    .fit-card h3 {
+      margin-bottom: 32px;
+      color: var(--white);
+      font-size: 1.15rem;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .fit-card.yes h3 {
+      color: var(--terra);
+    }
+
+    .fit-card ul {
+      width: min(100%, 500px);
+      margin: 0 auto;
+      list-style: none;
+      display: grid;
+      gap: 16px;
+    }
+
+    .fit-card li {
+      display: grid;
+      grid-template-columns: 18px 1fr;
+      gap: 12px;
+      color: var(--muted);
+      font-size: .96rem;
+      line-height: 1.65;
+    }
+
+    .fit-card.yes li {
+      color: var(--off);
+    }
+
+    .fit-card li::before {
+      content: "–";
+      color: var(--dim);
+    }
+
+    .fit-card.yes li::before {
+      content: "+";
+      color: var(--terra);
+      font-weight: 800;
+    }
+
+    .fit-note {
+      width: min(100%, 500px);
+      margin: 30px auto 0;
+      padding-top: 24px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: .88rem;
+      line-height: 1.7;
+      text-align: center;
+    }
+
+    .cta-section {
+      padding: 132px 0;
+      border-top: 1px solid var(--line);
+      background: var(--bg);
+    }
+
+    .cta-grid {
+      display: grid;
+      grid-template-columns: minmax(0, .9fr) minmax(380px, 1fr);
+      gap: 88px;
+      align-items: start;
+    }
+
+    .cta-copy {
+      position: sticky;
+      top: 64px;
+      padding-top: 6px;
+    }
+
+    .cta-copy .eyebrow {
+      justify-content: flex-start;
+    }
+
+    .cta-copy .eyebrow::before {
+      display: none;
+    }
+
+    .cta-title {
+      margin-bottom: 26px;
+      font-size: clamp(3rem, 5.6vw, 5.6rem);
+      line-height: .9;
+    }
+
+    .cta-copy > p {
+      width: min(100%, 430px);
+      color: var(--muted);
+      font-size: 1rem;
+      line-height: 1.8;
+    }
+
+    .sales-note {
+      width: min(100%, 430px);
+      margin-top: 36px;
+      padding: 20px 24px;
+      border-left: 2px solid var(--terra);
+      background: var(--terra-soft);
+    }
+
+    .sales-note strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--white);
+      font-size: .92rem;
+      font-weight: 800;
+    }
+
+    .sales-note span {
+      color: var(--muted);
+      font-size: .9rem;
+      line-height: 1.7;
+    }
+
+    .form-panel {
+      background: var(--bg-soft);
+      border: 1px solid var(--line);
+      padding: 46px;
+    }
+
+    .form-head {
+      margin-bottom: 34px;
+      padding-bottom: 26px;
+      border-bottom: 1px solid var(--line);
+      text-align: center;
+    }
+
+    .form-head h3 {
+      margin-bottom: 8px;
+      color: var(--white);
+      font-size: 1.12rem;
+      font-weight: 800;
+    }
+
+    .form-head p {
+      color: var(--muted);
+      font-size: .65rem;
+      font-weight: 700;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+
+    .field {
+      margin-bottom: 18px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 10px;
+      color: var(--off);
+      font-size: .58rem;
+      font-weight: 800;
+      letter-spacing: .28em;
+      line-height: 1.45;
+      text-transform: uppercase;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      min-height: 48px;
+      border: 1px solid var(--line);
+      border-radius: 0;
+      outline: none;
+      background: var(--bg);
+      color: var(--white);
+      font: 300 1rem "Raleway", Arial, sans-serif;
+      line-height: 1.4;
+      padding: 14px 16px;
+      transition: border-color .2s, background .2s;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    textarea {
+      min-height: 92px;
+      resize: vertical;
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+      color: #686868;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: var(--terra);
+      background: #0f0f0f;
+    }
+
+    select {
+      cursor: pointer;
+      color: var(--muted);
+      background-image: url("data:image/svg+xml,%3Csvg width='12' height='7' viewBox='0 0 12 7' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23A9A9A9' stroke-width='1.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 16px center;
+      padding-right: 42px;
+    }
+
+    select:valid {
+      color: var(--white);
+    }
+
+    option {
+      background: var(--bg);
+      color: var(--white);
+    }
+
+    .submit-button {
+      width: 100%;
+      min-height: 54px;
+      margin-top: 8px;
+      border: 1px solid var(--terra);
+      background: transparent;
+      color: var(--terra);
+      cursor: pointer;
+      font: 800 .62rem "Raleway", Arial, sans-serif;
+      letter-spacing: .3em;
+      text-transform: uppercase;
+      transition: background .25s, color .25s, transform .25s;
+    }
+
+    .submit-button:hover,
+    .submit-button:focus-visible {
+      background: var(--terra);
+      color: var(--bg);
+      transform: translateY(-1px);
+    }
+
+    .form-note {
+      margin-top: 16px;
+      color: var(--muted);
+      font-size: .78rem;
+      line-height: 1.5;
+      text-align: center;
+    }
+
+    footer {
+      padding: 56px 0 52px;
+      border-top: 1px solid var(--line);
+      background: var(--bg);
+      text-align: center;
+    }
+
+    .footer-title {
+      padding-bottom: 40px;
+      border-bottom: 1px solid var(--line);
+      font-size: clamp(3.2rem, 8vw, 7.4rem);
+      line-height: .88;
+      text-transform: uppercase;
+    }
+
+    .footer-copy {
+      margin-top: 34px;
+      color: var(--muted);
+      font-size: .78rem;
+      font-weight: 400;
+      line-height: 1.8;
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(34px);
+      transition: opacity .8s var(--ease), transform .8s var(--ease);
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: none;
+    }
+
+    @media (max-width: 980px) {
+      .wrap {
+        width: min(100% - 56px, var(--wrap));
+      }
+
+      .section,
+      .cta-section {
+        padding: 92px 0;
+      }
+
+      .system-grid,
+      .steps-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .fit-grid,
+      .cta-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .cta-grid {
+        gap: 46px;
+      }
+
+      .cta-copy {
+        position: static;
+        text-align: center;
+      }
+
+      .cta-copy .eyebrow {
+        justify-content: center;
+      }
+
+      .cta-copy .eyebrow::before {
+        display: block;
+      }
+
+      .cta-copy > p,
+      .sales-note {
+        margin-left: auto;
+        margin-right: auto;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .wrap {
+        width: min(100% - 36px, var(--wrap));
+      }
+
+      .hero {
+        min-height: 660px;
+        align-items: start;
+        padding-top: 96px;
+      }
+
+      .hero h1 {
+        font-size: clamp(3.1rem, 15vw, 4.7rem);
+        margin-bottom: 24px;
+      }
+
+      .hero-problem {
+        margin-bottom: 22px;
+      }
+
+      .hero-actions {
+        align-items: stretch;
+        flex-direction: column;
+        width: min(100%, 340px);
+        margin: 0 auto;
+      }
+
+      .button,
+      .ghost-link {
+        width: 100%;
+      }
+
+      .section,
+      .cta-section {
+        padding: 74px 0;
+      }
+
+      .section-head {
+        margin-bottom: 44px;
+      }
+
+      .eyebrow {
+        gap: 10px;
+        margin-bottom: 22px;
+        letter-spacing: .28em;
+      }
+
+      .eyebrow::before,
+      .eyebrow::after {
+        width: 22px;
+      }
+
+      .section-title {
+        font-size: clamp(2.6rem, 12vw, 4.2rem);
+      }
+
+      .system-grid,
+      .steps-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .system-card,
+      .step-card {
+        min-height: auto;
+        padding: 40px 26px;
+      }
+
+      .fit-card {
+        padding: 42px 26px;
+      }
+
+      .fit-card h3 {
+        text-align: left;
+      }
+
+      .form-panel {
+        padding: 30px 20px;
+      }
+
+      label {
+        letter-spacing: .2em;
+      }
+
+      .submit-button {
+        line-height: 1.45;
+        padding: 16px 14px;
+      }
+
+      .footer-title {
+        padding-bottom: 30px;
+        font-size: clamp(3.4rem, 15vw, 5rem);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+        animation-duration: .01ms !important;
+      }
+
+      .reveal {
+        opacity: 1;
+        transform: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-inner">
+        <h1 id="hero-title">
+          Sua agência<br>
+          depende de você<br>
+          <em>pra tudo?</em>
+        </h1>
+        <p class="hero-problem">Cliente esperando resposta, orçamento parado, roteiro pela metade, direct sem retorno e WhatsApp cheio de gente perguntando preço.</p>
+        <p class="hero-promise">Eu instalo um sistema com IA que atende, qualifica e organiza sua operação para você parar de carregar tudo sozinha.</p>
+        <div class="hero-actions">
+          <a class="button" href="#conversar">Quero conversar</a>
+          <a class="ghost-link" href="#sistema">Ver o sistema</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section soft" id="sistema">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <p class="eyebrow">O que eu instalo</p>
+          <h2 class="section-title">O sistema que roda<br><em>no seu lugar</em></h2>
+          <p class="section-intro">Quatro peças que trabalham juntas para tirar você do improviso e transformar atendimento em reserva.</p>
+        </div>
+
+        <div class="system-grid">
+          <article class="system-card reveal">
+            <span class="big-number">01</span>
+            <span class="card-index">01 / 04</span>
+            <h3>Agentes de IA</h3>
+            <p>Respondem seus leads, fazem as primeiras perguntas e identificam quem tem real intenção de viajar antes de você entrar na conversa.</p>
+          </article>
+          <article class="system-card reveal">
+            <span class="big-number">02</span>
+            <span class="card-index">02 / 04</span>
+            <h3>Automações</h3>
+            <p>Conectam Instagram, WhatsApp e funil para que cada lead siga o caminho certo sem depender de você lembrar de tudo.</p>
+          </article>
+          <article class="system-card reveal">
+            <span class="big-number">03</span>
+            <span class="card-index">03 / 04</span>
+            <h3>Conteúdo</h3>
+            <p>Organiza sua comunicação para atrair clientes certos, gerar desejo pelos destinos e fazer seu Instagram trabalhar a favor das vendas.</p>
+          </article>
+          <article class="system-card reveal">
+            <span class="big-number">04</span>
+            <span class="card-index">04 / 04</span>
+            <h3>Anúncios</h3>
+            <p>Trazem pessoas interessadas em viajar para dentro do seu funil, com uma estrutura pronta para receber, qualificar e converter.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section dark">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <p class="eyebrow">Como funciona</p>
+          <h2 class="section-title">Da primeira mensagem<br><em>à reserva encaminhada</em></h2>
+        </div>
+
+        <div class="steps-grid">
+          <article class="step-card reveal">
+            <span class="step-index">Etapa 01</span>
+            <h3>Conversa</h3>
+            <p>Você me mostra como sua agência funciona hoje, como chegam os leads, onde você atende e onde mais perde tempo.</p>
+            <span class="step-ghost">01</span>
+          </article>
+          <article class="step-card reveal">
+            <span class="step-index">Etapa 02</span>
+            <h3>Diagnóstico</h3>
+            <p>Eu analiso seu Instagram, WhatsApp, atendimento e processo comercial para mostrar onde o cliente está travando antes de fechar.</p>
+            <span class="step-ghost">02</span>
+          </article>
+          <article class="step-card reveal">
+            <span class="step-index">Etapa 03</span>
+            <h3>Instalação</h3>
+            <p>Monto a estrutura com IA, automações, conteúdo e funil para organizar a entrada, a qualificação e a condução dos leads.</p>
+            <span class="step-ghost">03</span>
+          </article>
+          <article class="step-card reveal">
+            <span class="step-index">Etapa 04</span>
+            <h3>Acompanhamento</h3>
+            <p>Ajusto com você até o sistema funcionar na rotina real da sua agência, sem depender de gambiarra ou excesso de ferramenta.</p>
+            <span class="step-ghost">04</span>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section soft" id="para-quem">
+      <div class="wrap">
+        <div class="section-head reveal">
+          <p class="eyebrow">Qualificação</p>
+          <h2 class="section-title">Pra quem isso<br><em>faz sentido</em></h2>
+        </div>
+
+        <div class="fit-grid">
+          <article class="fit-card yes reveal">
+            <h3>É pra você se</h3>
+            <ul>
+              <li>Sua agência já vende, mas tudo ainda passa por você.</li>
+              <li>Você atende pelo Instagram e WhatsApp, mas sente que perde muitos leads no caminho.</li>
+              <li>Você passa tempo demais respondendo curioso, pedido de orçamento e cliente que só quer preço.</li>
+              <li>Você quer atrair clientes mais preparados antes de entrar na conversa.</li>
+              <li>Você já tentou postar mais, contratar social media ou impulsionar conteúdo, mas o problema continuou.</li>
+              <li>Você quer um sistema rodando, não mais uma ferramenta solta pra aprender.</li>
+            </ul>
+          </article>
+
+          <article class="fit-card no reveal">
+            <h3>Não é pra você se</h3>
+            <ul>
+              <li>Sua agência ainda não vende ou está começando do zero.</li>
+              <li>Você quer só aprender IA, mas não quer implementar uma estrutura comercial.</li>
+              <li>Você procura apenas artes bonitas para o Instagram.</li>
+              <li>Você ainda não tem orçamento para investir na organização da operação.</li>
+            </ul>
+            <p class="fit-note">Sem problema. Quando fizer sentido, me procura.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta-section" id="conversar">
+      <div class="wrap">
+        <div class="cta-grid">
+          <div class="cta-copy reveal">
+            <p class="eyebrow">Próximo passo</p>
+            <h2 class="cta-title">Vamos<br><em>conversar</em></h2>
+            <p>Algumas perguntas rápidas e eu já chego na conversa entendendo o momento da sua agência.</p>
+            <div class="sales-note">
+              <strong>Sem pressão de venda</strong>
+              <span>A conversa é sobre a sua operação, seus atendimentos e seus gargalos. Você decide se faz sentido seguir.</span>
+            </div>
+          </div>
+
+          <div class="form-panel reveal">
+            <div class="form-head">
+              <h3>Preencha pra começar</h3>
+              <p>Leva 1 minuto · Sem compromisso</p>
+            </div>
+
+            <form id="leadForm">
+              <div class="field">
+                <label for="nome">Seu nome</label>
+                <input id="nome" name="nome" type="text" placeholder="Como você se chama?" autocomplete="name" required>
+              </div>
+
+              <div class="field">
+                <label for="whatsapp">Seu WhatsApp</label>
+                <input id="whatsapp" name="whatsapp" type="tel" placeholder="(00) 00000-0000" autocomplete="tel" required>
+              </div>
+
+              <div class="field">
+                <label for="perfil">Você é agente autônoma ou tem agência?</label>
+                <input id="perfil" name="perfil" type="text" placeholder="Ex: sou agente autônoma, tenho agência própria, trabalho em parceria" required>
+              </div>
+
+              <div class="field">
+                <label for="tipoViagem">Qual tipo de viagem você mais vende?</label>
+                <input id="tipoViagem" name="tipoViagem" type="text" placeholder="Ex: Disney, Europa, lua de mel, nacional, grupos, cruzeiros, luxo, corporativo" required>
+              </div>
+
+              <div class="field">
+                <label for="faturamento">Qual sua média de faturamento mensal?</label>
+                <select id="faturamento" name="faturamento" required>
+                  <option value="" disabled selected>Selecione a faixa</option>
+                  <option>Até R$10 mil</option>
+                  <option>R$10 mil a R$30 mil</option>
+                  <option>R$30 mil a R$70 mil</option>
+                  <option>R$70 mil a R$150 mil</option>
+                  <option>Acima de R$150 mil</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="gargalo">Qual seu maior gargalo hoje?</label>
+                <textarea id="gargalo" name="gargalo" placeholder="Ex: recebo muitos curiosos, demoro para responder, não sei o que postar, tenho poucos leads qualificados, perco clientes no WhatsApp" required></textarea>
+              </div>
+
+              <div class="field">
+                <label for="tentou">O que você já tentou pra resolver?</label>
+                <textarea id="tentou" name="tentou" placeholder="Ex: social media, tráfego pago, curso, automação, postar mais, mudar o Instagram"></textarea>
+              </div>
+
+              <button class="submit-button" type="submit">Continuar no WhatsApp</button>
+              <p class="form-note">Suas respostas vão direto pra mim.</p>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <h2 class="footer-title">Vamos<br><em>conversar?</em></h2>
+      <p class="footer-copy">© 2026 João Paulo da Silva<br>Estrategista de IA para Agentes de Viagens</p>
+    </div>
+  </footer>
+
+  <script>
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry, index) => {
+        if (entry.isIntersecting) {
+          setTimeout(() => entry.target.classList.add("visible"), index * 55);
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: .12 });
+
+    document.querySelectorAll(".reveal").forEach((element) => {
+      revealObserver.observe(element);
+    });
+
+    const WHATSAPP_NUMBER = "5561981784728";
+    const form = document.getElementById("leadForm");
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+
+      const value = (id) => document.getElementById(id).value.trim();
+      const nome = value("nome");
+      const whatsapp = value("whatsapp");
+      const perfil = value("perfil");
+      const tipoViagem = value("tipoViagem");
+      const faturamento = value("faturamento");
+      const gargalo = value("gargalo");
+      const tentou = value("tentou");
+
+      const message = [
+        "Oi JP, quero conversar sobre um sistema com IA para minha agência de viagens.",
+        "",
+        `Nome: ${nome}`,
+        `WhatsApp: ${whatsapp}`,
+        `Perfil: ${perfil}`,
+        `Tipo de viagem que mais vendo: ${tipoViagem}`,
+        `Faturamento mensal: ${faturamento}`,
+        `Maior gargalo hoje: ${gargalo}`,
+        tentou ? `O que já tentei: ${tentou}` : ""
+      ].filter(Boolean).join("\n");
+
+      const button = form.querySelector(".submit-button");
+      button.textContent = "Abrindo WhatsApp";
+      button.disabled = true;
+
+      window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, "_blank");
+
+      setTimeout(() => {
+        button.textContent = "Continuar no WhatsApp";
+        button.disabled = false;
+      }, 2500);
+    });
+  </script>
+</body>
+</html>
