@@ -39,6 +39,7 @@
   .row-hover:hover { background: rgba(194,107,58,0.06); }
   .fade-in { animation: fadeIn 0.35s ease-out; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  #auth-gate:not(.hidden) { display: flex !important; }
 </style>
 </head>
 <body>
@@ -326,15 +327,34 @@
 </div>
 
 <!-- Auth prompt shown when no key is set -->
-<div id="auth-gate" class="min-h-screen flex items-center justify-center hidden">
-  <div class="card p-6 max-w-sm w-full">
-    <div class="font-semibold mb-2">Dashboard key required</div>
-    <div class="text-sm text-[color:var(--dim)] mb-4">
-      Paste the <code>DASH_KEY</code> you set in Cloudflare environment variables.
-    </div>
-    <input id="auth-input" type="password" placeholder="DASH_KEY" class="w-full border border-[color:var(--border)] rounded-lg px-3 py-2 text-sm mb-3 font-mono">
-    <button id="auth-submit" class="w-full bg-[color:var(--text)] text-white rounded-lg py-2 text-sm font-semibold">Open dashboard</button>
-    <div id="auth-error" class="text-xs text-[color:var(--accent-red)] mt-2 hidden">Invalid key.</div>
+<div id="auth-gate" class="min-h-screen hidden" style="
+  background: radial-gradient(ellipse at center, rgba(194,107,58,0.22) 0%, rgba(13,13,13,0.85) 50%, #0D0D0D 100%);
+  align-items:center; justify-content:center; font-family:'Raleway',sans-serif;
+">
+  <div style="width:min(100% - 48px, 400px); text-align:center;">
+    <div style="width:52px;height:52px;border-radius:50%;background:var(--terracota);color:#fff;font-size:1.1rem;font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 28px;">JP</div>
+    <div style="font-size:0.6rem;font-weight:800;letter-spacing:0.3em;text-transform:uppercase;color:var(--terracota);margin-bottom:14px;">Acesso restrito</div>
+    <h1 style="font-size:2rem;font-weight:800;color:var(--text);line-height:1.1;margin-bottom:10px;">JP Dashboard</h1>
+    <p style="font-size:0.9rem;color:var(--dim);margin-bottom:36px;line-height:1.6;">Área privada de rastreamento e atribuição.</p>
+
+    <input id="auth-input" type="password" placeholder="Senha de acesso" style="
+      width:100%; min-height:50px; background:#1A1A1A; border:1px solid rgba(194,107,58,0.35);
+      border-radius:0; color:var(--text); font-family:'Raleway',sans-serif; font-size:1rem;
+      padding:0 18px; outline:none; margin-bottom:12px; letter-spacing:0.05em;
+      transition:border-color .2s;
+    " onfocus="this.style.borderColor='var(--terracota)'" onblur="this.style.borderColor='rgba(194,107,58,0.35)'">
+
+    <button id="auth-submit" style="
+      width:100%; min-height:50px; background:transparent; border:1px solid var(--terracota);
+      color:var(--terracota); font-family:'Raleway',sans-serif; font-size:0.65rem; font-weight:800;
+      letter-spacing:0.28em; text-transform:uppercase; cursor:pointer;
+      transition:background .25s, color .25s;
+    " onmouseover="this.style.background='var(--terracota)';this.style.color='#0D0D0D'"
+       onmouseout="this.style.background='transparent';this.style.color='var(--terracota)'">
+      Entrar
+    </button>
+
+    <div id="auth-error" class="hidden" style="margin-top:14px;font-size:0.82rem;color:var(--accent-red);">Senha incorreta.</div>
   </div>
 </div>
 
