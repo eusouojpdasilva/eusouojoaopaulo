@@ -270,8 +270,8 @@
       position: relative;
       overflow: hidden;
       background: var(--bg-soft);
-      padding: 48px 30px 42px;
-      text-align: center;
+      padding: 40px 32px 36px;
+      text-align: left;
       transition: background .3s var(--ease), transform .3s var(--ease);
     }
 
@@ -316,11 +316,11 @@
     .card-index,
     .step-index {
       display: block;
-      margin-bottom: 22px;
+      margin-bottom: 18px;
       color: var(--terra);
-      font-size: .58rem;
+      font-size: .6rem;
       font-weight: 800;
-      letter-spacing: .34em;
+      letter-spacing: .3em;
       text-transform: uppercase;
     }
 
@@ -328,9 +328,9 @@
     .step-card h3 {
       position: relative;
       z-index: 1;
-      margin-bottom: 12px;
+      margin-bottom: 14px;
       color: var(--white);
-      font-size: 1.1rem;
+      font-size: 1.18rem;
       font-weight: 800;
       line-height: 1.2;
     }
@@ -339,22 +339,22 @@
     .step-card p {
       position: relative;
       z-index: 1;
-      color: var(--muted);
-      font-size: .93rem;
-      line-height: 1.75;
+      color: #c0b8b0;
+      font-size: 1rem;
+      line-height: 1.7;
     }
 
     .step-card {
       min-height: 240px;
-      padding-top: 54px;
+      padding-top: 40px;
     }
 
     .step-ghost {
       position: absolute;
-      right: 14px;
-      bottom: -16px;
+      right: 16px;
+      bottom: -12px;
       color: var(--line);
-      font-size: 6.8rem;
+      font-size: 6rem;
       font-weight: 800;
       line-height: .9;
       pointer-events: none;
@@ -374,7 +374,7 @@
 
     .fit-card {
       background: var(--bg-soft);
-      padding: 56px 52px;
+      padding: 52px 48px;
     }
 
     .fit-card.no {
@@ -382,11 +382,11 @@
     }
 
     .fit-card h3 {
-      margin-bottom: 32px;
+      margin-bottom: 28px;
       color: var(--white);
       font-size: 1.15rem;
       font-weight: 800;
-      text-align: center;
+      text-align: left;
     }
 
     .fit-card.yes h3 {
@@ -394,24 +394,22 @@
     }
 
     .fit-card ul {
-      width: min(100%, 500px);
-      margin: 0 auto;
       list-style: none;
       display: grid;
-      gap: 16px;
+      gap: 18px;
     }
 
     .fit-card li {
       display: grid;
       grid-template-columns: 18px 1fr;
       gap: 12px;
-      color: var(--muted);
-      font-size: .96rem;
+      color: #a0998f;
+      font-size: 1rem;
       line-height: 1.65;
     }
 
     .fit-card.yes li {
-      color: var(--off);
+      color: #ddd6cc;
     }
 
     .fit-card li::before {
