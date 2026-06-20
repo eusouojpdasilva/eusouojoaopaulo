@@ -3,6 +3,26 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- GA4 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-HFVQTEY7MF"></script>
+<script>
+window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}
+gtag('js',new Date());
+gtag('config','G-HFVQTEY7MF');
+gtag('event','view_item',{item_name:'Protocolo Liberdade Digital'});
+</script>
+<!-- Meta Pixel -->
+<script>
+!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+document,'script','https://connect.facebook.net/en_US/fbevents.js');
+fbq('init','1071247633056444');
+fbq('track','PageView');
+fbq('track','ViewContent',{content_name:'Protocolo Liberdade Digital',content_type:'product'});
+</script>
+<noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=1071247633056444&ev=PageView&noscript=1"/></noscript>
 <title>Protocolo Liberdade Digital</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,300;0,400;0,600;0,700;0,800;1,300&display=swap');
@@ -555,7 +575,7 @@
     <p class="lead dim">Falta o mapa. O resto se resolve andando.</p>
 
     <div class="cta-mid">
-      <a href="CHECKOUT_LINK" class="cta-button">Quero meu Protocolo Liberdade Digital agora</a>
+      <a href="CHECKOUT_LINK" class="cta-button" onclick="fbq('track','InitiateCheckout');gtag('event','begin_checkout',{item_name:'Protocolo Liberdade Digital'});">Quero meu Protocolo Liberdade Digital agora</a>
     </div>
   </section>
 
@@ -727,7 +747,7 @@
       <div class="price-eyebrow">Investimento</div>
       <div class="price-value">R$27</div>
       <div class="price-sub">Menos do que um almoço, por um material que poupa meses de pesquisa solta e entrega o caminho organizado de uma vez.</div>
-      <a href="CHECKOUT_LINK" class="cta-button">Quero meu Protocolo Liberdade Digital agora</a>
+      <a href="CHECKOUT_LINK" class="cta-button" onclick="fbq('track','InitiateCheckout');gtag('event','begin_checkout',{item_name:'Protocolo Liberdade Digital'});">Quero meu Protocolo Liberdade Digital agora</a>
       <div class="cta-note">Acesso imediato após a confirmação do pagamento</div>
     </div>
   </section>
@@ -767,4 +787,6 @@
 </script>
 </body>
 </html>
+
+
 
