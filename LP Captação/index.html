@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
@@ -1110,9 +1110,25 @@
       button.textContent = "Enviando…";
       button.disabled = true;
 
-      const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
-      window.location.href = `/obrigado.html?wa=${encodeURIComponent(waUrl)}`;
+      // Captura UTMs da URL atual
+      const _up = new URLSearchParams(location.search);
+      const _utmSource   = _up.get('utm_source')   || '';
+      const _utmMedium   = _up.get('utm_medium')   || '';
+      const _utmCampaign = _up.get('utm_campaign') || '';
+      const _utmParts = [_utmSource, _utmMedium, _utmCampaign].filter(Boolean);
+      const _utmLine  = _utmParts.length ? `\nOrigem: ${_utmParts.join(' / ')}` : '';
+
+      const fullMessage = message + _utmLine;
+      const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(fullMessage)}`;
+
+      // Passa UTMs para a pagina de obrigado
+      const _obrigadoParams = new URLSearchParams({ wa: waUrl });
+      if (_utmSource)   _obrigadoParams.set('utm_source',   _utmSource);
+      if (_utmMedium)   _obrigadoParams.set('utm_medium',   _utmMedium);
+      if (_utmCampaign) _obrigadoParams.set('utm_campaign', _utmCampaign);
+      window.location.href = `/obrigado.html?${_obrigadoParams.toString()}`;
     });
   </script>
 </body>
 </html>
+

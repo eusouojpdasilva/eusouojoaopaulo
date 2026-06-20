@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
@@ -9,7 +9,13 @@
 window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}
 gtag('js',new Date());
 gtag('config','G-HFVQTEY7MF');
-gtag('event','generate_lead');
+(function(){
+  var _p = new URLSearchParams(location.search);
+  var _src  = _p.get('utm_source')   || '';
+  var _med  = _p.get('utm_medium')   || '';
+  var _camp = _p.get('utm_campaign') || '';
+  gtag('event','generate_lead',{utm_source:_src,utm_medium:_med,utm_campaign:_camp});
+})();
 </script>
 <script>
 !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
@@ -19,7 +25,13 @@ t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
 document,'script','https://connect.facebook.net/en_US/fbevents.js');
 fbq('init','1071247633056444');
 fbq('track','PageView');
-fbq('track','Lead');
+(function(){
+  var _p = new URLSearchParams(location.search);
+  var _src  = _p.get('utm_source')   || '';
+  var _med  = _p.get('utm_medium')   || '';
+  var _camp = _p.get('utm_campaign') || '';
+  fbq('track','Lead',{utm_source:_src,utm_medium:_med,utm_campaign:_camp});
+})();
 </script>
 <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=1071247633056444&ev=Lead&noscript=1"/></noscript>
 <style>
@@ -144,3 +156,4 @@ fbq('track','Lead');
 </script>
 </body>
 </html>
+
