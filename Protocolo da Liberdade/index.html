@@ -785,8 +785,30 @@ fbq('track','ViewContent',{content_name:'Protocolo Liberdade Digital',content_ty
   window.addEventListener("resize",function(){ renderer.setSize(window.innerWidth,window.innerHeight); material.uniforms.iResolution.value.set(window.innerWidth,window.innerHeight); });
 })();
 </script>
+<script>
+// Captura UTMs da URL e injeta no link de checkout da Hotmart via parâmetro sck
+(function() {
+  var p = new URLSearchParams(location.search);
+  var src  = p.get('utm_source')   || '';
+  var med  = p.get('utm_medium')   || '';
+  var camp = p.get('utm_campaign') || '';
+  var cont = p.get('utm_content')  || '';
+  var term = p.get('utm_term')     || '';
+
+  if (!src && !med && !camp) return; // sem UTMs, não altera o link
+
+  var sck = [src, med, camp, cont, term].map(encodeURIComponent).join('|');
+
+  document.querySelectorAll('a[href*="pay.hotmart.com"]').forEach(function(a) {
+    var url = new URL(a.href);
+    url.searchParams.set('sck', sck);
+    a.href = url.toString();
+  });
+})();
+</script>
 </body>
 </html>
+
 
 
 
