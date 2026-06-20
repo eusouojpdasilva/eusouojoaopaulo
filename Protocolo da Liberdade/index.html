@@ -518,89 +518,6 @@ fbq('track','ViewContent',{content_name:'Protocolo Liberdade Digital',content_ty
     max-width: 380px;
   }
 
-  /* ───── GLOW CTA FINAL ───── */
-  .cta-glow-section {
-    position: relative;
-    overflow: hidden;
-    padding: 72px 24px 80px;
-    text-align: center;
-  }
-  .cta-glow-inner {
-    position: relative;
-    z-index: 2;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
-  }
-  .cta-glow-section .price-eyebrow {
-    letter-spacing: 0.22em;
-    font-size: 0.62rem;
-    font-weight: 800;
-    text-transform: uppercase;
-    color: var(--terracota);
-  }
-  .cta-glow-section .price-value {
-    font-size: clamp(3rem, 10vw, 4.5rem);
-    font-weight: 800;
-    color: #fff;
-    line-height: 1;
-  }
-  .cta-glow-section .price-sub {
-    max-width: 440px;
-    font-size: 0.95rem;
-    color: var(--text-dim);
-    line-height: 1.7;
-    margin: 0;
-  }
-  .cta-glow-btn {
-    display: inline-block;
-    padding: 18px 36px;
-    background: var(--terracota);
-    color: #fff;
-    font-family: 'Raleway', sans-serif;
-    font-size: 0.85rem;
-    font-weight: 800;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    text-decoration: none;
-    border-radius: 10px;
-    max-width: 460px;
-    width: 100%;
-    position: relative;
-    z-index: 2;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-    box-shadow: 0 0 0 0 rgba(194,107,58,0);
-  }
-  .cta-glow-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 40px rgba(194,107,58,0.45);
-  }
-  .cta-glow-btn:active { transform: scale(0.98); }
-  .cta-glow-aura {
-    position: absolute;
-    bottom: 0; left: 50%;
-    transform: translateX(-50%) translateY(2rem);
-    width: 120%;
-    height: 420px;
-    background: radial-gradient(ellipse 80% 60% at 50% 100%, rgba(194,107,58,0.55) 0%, rgba(194,107,58,0.18) 45%, transparent 75%);
-    pointer-events: none;
-    z-index: 1;
-    opacity: 0.75;
-    transition: transform 0.55s ease, opacity 0.55s ease;
-    filter: blur(2px);
-  }
-  .cta-glow-section:hover .cta-glow-aura {
-    transform: translateX(-50%) translateY(-2rem);
-    opacity: 1;
-  }
-  .cta-note-glow {
-    font-size: 12.5px;
-    color: rgba(240,232,216,0.35);
-    position: relative;
-    z-index: 2;
-  }
-
   /* ───── FOOTER ───── */
   footer {
     text-align: center;
@@ -825,14 +742,13 @@ fbq('track','ViewContent',{content_name:'Protocolo Liberdade Digital',content_ty
   </section>
 
   <!-- ═══════════ PREÇO / CTA FINAL ═══════════ -->
-  <section class="cta-glow-section">
-    <div class="cta-glow-aura"></div>
-    <div class="cta-glow-inner">
+  <section class="bordered">
+    <div class="price-box">
       <div class="price-eyebrow">Investimento</div>
       <div class="price-value">R$27</div>
       <div class="price-sub">Menos do que um almoço, por um material que poupa meses de pesquisa solta e entrega o caminho organizado de uma vez.</div>
-      <a href="CHECKOUT_LINK" class="cta-glow-btn" onclick="fbq('track','InitiateCheckout');gtag('event','begin_checkout',{item_name:'Protocolo Liberdade Digital'});">Quero meu Protocolo Liberdade Digital agora</a>
-      <div class="cta-note-glow">Acesso imediato após a confirmação do pagamento</div>
+      <a href="CHECKOUT_LINK" class="cta-button" onclick="fbq('track','InitiateCheckout');gtag('event','begin_checkout',{item_name:'Protocolo Liberdade Digital'});">Quero meu Protocolo Liberdade Digital agora</a>
+      <div class="cta-note">Acesso imediato após a confirmação do pagamento</div>
     </div>
   </section>
 
@@ -871,6 +787,7 @@ fbq('track','ViewContent',{content_name:'Protocolo Liberdade Digital',content_ty
 </script>
 </body>
 </html>
+
 
 
 
