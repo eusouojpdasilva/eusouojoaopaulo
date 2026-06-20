@@ -575,7 +575,7 @@ fbq('track','ViewContent',{content_name:'Protocolo Liberdade Digital',content_ty
     <p class="lead dim">Falta o mapa. O resto se resolve andando.</p>
 
     <div class="cta-mid">
-      <a href="CHECKOUT_LINK" class="cta-button" onclick="fbq('track','InitiateCheckout');gtag('event','begin_checkout',{item_name:'Protocolo Liberdade Digital'});">Quero meu Protocolo Liberdade Digital agora</a>
+      <a onclick="return false;" href="https://pay.hotmart.com/U106418436K?checkoutMode=2" class="hotmart-fb hotmart__button-checkout"><img src='https://static.hotmart.com/img/btn-buy-green.png'></a>
     </div>
   </section>
 
@@ -747,7 +747,7 @@ fbq('track','ViewContent',{content_name:'Protocolo Liberdade Digital',content_ty
       <div class="price-eyebrow">Investimento</div>
       <div class="price-value">R$27</div>
       <div class="price-sub">Menos do que um almoço, por um material que poupa meses de pesquisa solta e entrega o caminho organizado de uma vez.</div>
-      <a href="CHECKOUT_LINK" class="cta-button" onclick="fbq('track','InitiateCheckout');gtag('event','begin_checkout',{item_name:'Protocolo Liberdade Digital'});">Quero meu Protocolo Liberdade Digital agora</a>
+      <a onclick="return false;" href="https://pay.hotmart.com/U106418436K?checkoutMode=2" class="hotmart-fb hotmart__button-checkout"><img src='https://static.hotmart.com/img/btn-buy-green.png'></a>
       <div class="cta-note">Acesso imediato após a confirmação do pagamento</div>
     </div>
   </section>
@@ -785,8 +785,22 @@ fbq('track','ViewContent',{content_name:'Protocolo Liberdade Digital',content_ty
   window.addEventListener("resize",function(){ renderer.setSize(window.innerWidth,window.innerHeight); material.uniforms.iResolution.value.set(window.innerWidth,window.innerHeight); });
 })();
 </script>
+<script type="text/javascript">
+  function importHotmart(){
+    var imported = document.createElement('script');
+    imported.src = 'https://static.hotmart.com/checkout/widget.min.js';
+    document.head.appendChild(imported);
+    var link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.type = 'text/css';
+    link.href = 'https://static.hotmart.com/css/hotmart-fb.min.css';
+    document.head.appendChild(link);
+  }
+  importHotmart();
+</script>
 </body>
 </html>
+
 
 
 
