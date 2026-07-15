@@ -1527,11 +1527,11 @@ function openTarefaForm(id){
       </div>
     </div>
 
-    <div class="form-actions">
-      ${t?`<button class="btn btn-danger" onclick="deleteTarefa('${t.id}')">Remover</button>`:''}
-      ${t&&t.status!=='concluido'?`<button class="btn" style="border-color:var(--green);color:var(--green)" onclick="concluirTarefa('${t.id}')">✓ Concluído</button>`:''}
-      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
-      <button class="btn" onclick="${t?`updateTarefa('${t.id}')`:'saveTarefa()'}">${t?'Salvar':'Adicionar'}</button>
+    <div class="form-actions" style="flex-wrap:wrap;gap:6px">
+      ${t?`<button class="btn btn-danger" style="padding:6px 12px;font-size:11px" onclick="deleteTarefa('${t.id}')">Remover</button>`:''}
+      ${t&&t.status!=='concluido'?`<button class="btn" style="padding:6px 12px;font-size:11px;border-color:var(--green);color:var(--green)" onclick="concluirTarefa('${t.id}')">✓ Concluído</button>`:''}
+      <button class="btn btn-ghost" style="padding:6px 12px;font-size:11px" onclick="closeModal()">Cancelar</button>
+      <button class="btn" style="padding:6px 12px;font-size:11px" onclick="${t?`updateTarefa('${t.id}')`:'saveTarefa()'}">${t?'Salvar':'Adicionar'}</button>
     </div>
   </div>`);
   setTimeout(()=>{ _renderCkl(); window._chkRec(); },0);
