@@ -1529,6 +1529,7 @@ function openTarefaForm(id){
 
     <div class="form-actions">
       ${t?`<button class="btn btn-danger" onclick="deleteTarefa('${t.id}')">Remover</button>`:''}
+      ${t&&t.status!=='concluido'?`<button class="btn" style="border-color:var(--green);color:var(--green)" onclick="concluirTarefa('${t.id}')">✓ Concluído</button>`:''}
       <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
       <button class="btn" onclick="${t?`updateTarefa('${t.id}')`:'saveTarefa()'}">${t?'Salvar':'Adicionar'}</button>
     </div>
@@ -1553,6 +1554,14 @@ async function updateTarefa(id){
   const t=data.tarefas.find(x=>x.id===id);
   if(t) Object.assign(t,{clienteId:payload.cliente_id,titulo:payload.titulo,obs:payload.obs,status:payload.status,dataInicio:payload.data_inicio||'',dataEntrega:payload.data_entrega||'',checklist:payload.checklist});
   closeModal(); render();
+}
+
+async function concluirTarefa(id){
+  const {error}=await sb.from('tarefas').update({status:'concluido'}).eq('id',id);
+  if(error){ toast('Erro ao concluir tarefa'); return; }
+  const t=data.tarefas.find(x=>x.id===id);
+  if(t) t.status='concluido';
+  closeModal(); render(); toast('Tarefa concluída!','success');
 }
 
 async function deleteTarefa(id){
