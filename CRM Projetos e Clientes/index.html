@@ -987,7 +987,7 @@ function openLeadForm(id){
     <div class="form-row"><label class="form-label">Nicho</label><input class="form-input" id="fni" value="${l?l.nicho||'':''}" placeholder="Ex: Clínica estética"></div>
     <div class="form-row"><label class="form-label">Projeto</label><select class="form-input" id="fp">${Object.keys(PROJ).map(p=>`<option value="${p}" ${l&&l.proj===p?'selected':''}>${PROJ[p]}</option>`).join('')}</select></div>
     <div class="form-row"><label class="form-label">Status</label><select class="form-input" id="fs">${STATUSES.map(s=>`<option value="${s}" ${l&&l.status===s?'selected':''}>${ST_LABEL[s]}</option>`).join('')}</select></div>
-    <div class="form-row"><label class="form-label">Tipo de serviço</label><select class="form-input" id="ftipo">${['Assessoria','Consultoria','GMN','Landing Page','Outros'].map(t=>`<option ${l&&l.tipo===t?'selected':''}>${t}</option>`).join('')}</select></div>
+    <div class="form-row"><label class="form-label">Tipo de serviço</label><select class="form-input" id="ftipo">${['Implementação','Assessoria Mensal','Landing Page','Outros'].map(t=>`<option ${l&&l.tipo===t?'selected':''}>${t}</option>`).join('')}</select></div>
     <div class="form-row"><label class="form-label">Próximo follow-up</label><input class="form-input" type="date" id="ffup" value="${l&&l.followup?l.followup:''}"></div>
     <div class="form-row"><label class="form-label">Valor estimado</label>
       <div style="display:flex;gap:8px">
