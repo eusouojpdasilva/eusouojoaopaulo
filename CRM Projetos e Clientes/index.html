@@ -89,6 +89,7 @@ body{background:var(--bg);color:var(--text);font-family:'Raleway',sans-serif;fon
 .pill[data-proj="jp"].active{border-color:var(--terra);color:var(--terra);background:rgba(194,107,58,0.08)}
 .pill[data-proj="viaja"].active{border-color:var(--green);color:var(--green);background:rgba(93,202,165,0.08)}
 .pill[data-proj="nattiva"].active{border-color:var(--blue);color:var(--blue);background:rgba(133,183,235,0.08)}
+.pill[data-proj="solo"].active{border-color:var(--amber);color:var(--amber);background:rgba(239,159,39,0.08)}
 
 /* CONTENT */
 .content{padding:36px 32px;max-width:1440px;margin:0 auto;position:relative;z-index:1}
@@ -204,6 +205,7 @@ body{background:var(--bg);color:var(--text);font-family:'Raleway',sans-serif;fon
 .badge-jp{color:#E8845A;background:rgba(194,107,58,0.18);border:1px solid rgba(194,107,58,0.35)}
 .badge-viaja{color:#4DD9A8;background:rgba(93,202,165,0.15);border:1px solid rgba(93,202,165,0.3)}
 .badge-nattiva{color:#7EC8F5;background:rgba(133,183,235,0.15);border:1px solid rgba(133,183,235,0.3)}
+.badge-solo{color:#F5B04D;background:rgba(239,159,39,0.15);border:1px solid rgba(239,159,39,0.3)}
 
 /* CLIENTS */
 .clients-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
@@ -438,6 +440,7 @@ textarea.form-input{resize:vertical;min-height:80px}
   <button class="pill" data-proj="jp" onclick="setFilter(this,'jp')">Eu Sou o JP</button>
   <button class="pill" data-proj="viaja" onclick="setFilter(this,'viaja')">JP Viaja</button>
   <button class="pill" data-proj="nattiva" onclick="setFilter(this,'nattiva')">Nattiva Travel</button>
+  <button class="pill" data-proj="solo" onclick="setFilter(this,'solo')">Operación Solo</button>
   <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
     <label class="filter-label">Moeda</label>
     <select class="form-input" id="sel-currency" style="width:110px;padding:6px 8px;border-radius:6px;font-size:12px" onchange="setCurrency(this.value)">
@@ -508,10 +511,10 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ─── CONSTANTS ────────────────────────────────────────────────────────────────
-const PROJ = {jp:'Eu Sou o JP', viaja:'JP Viaja', nattiva:'Nattiva Travel'};
-const BADGE = {jp:'badge-jp', viaja:'badge-viaja', nattiva:'badge-nattiva'};
-const AV_BG = {jp:'rgba(194,107,58,0.2)', viaja:'rgba(93,202,165,0.18)', nattiva:'rgba(133,183,235,0.18)'};
-const AV_COLOR = {jp:'#C26B3A', viaja:'#5DCAA5', nattiva:'#85B7EB'};
+const PROJ = {jp:'Eu Sou o JP', viaja:'JP Viaja', nattiva:'Nattiva Travel', solo:'Operación Solo'};
+const BADGE = {jp:'badge-jp', viaja:'badge-viaja', nattiva:'badge-nattiva', solo:'badge-solo'};
+const AV_BG = {jp:'rgba(194,107,58,0.2)', viaja:'rgba(93,202,165,0.18)', nattiva:'rgba(133,183,235,0.18)', solo:'rgba(239,159,39,0.18)'};
+const AV_COLOR = {jp:'#C26B3A', viaja:'#5DCAA5', nattiva:'#85B7EB', solo:'#EF9F27'};
 const STATUSES = ['novo','contato','proposta','fechado','perdido'];
 const ST_LABEL = {novo:'Novo',contato:'Em Contato',proposta:'Proposta',fechado:'Fechado',perdido:'Perdido'};
 const TASK_STATUSES = ['a-fazer','andamento','revisao','concluido'];
