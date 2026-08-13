@@ -1759,7 +1759,7 @@ function renderFinanceiro(){
     if(m.contexto!=='empresarial') return false;
     if(m.periodo==='Mensal') return movAtivoNoMes(m, mes);
     return m.data && m.data.startsWith(mes);
-  });
+  }).sort((a,b)=>(b.data||'').localeCompare(a.data||''));
   const receitaExtraMes = movEmpMes.filter(m=>m.tipo==='receita').reduce((s,m)=>s+(m.valor||0),0);
   const despesaExtraMes = movEmpMes.filter(m=>m.tipo==='despesa').reduce((s,m)=>s+(m.valor||0),0);
   const investExtraMes  = movEmpMes.filter(m=>m.tipo==='investimento').reduce((s,m)=>s+(m.valor||0),0);
@@ -2041,7 +2041,7 @@ function renderFinanceiroPessoal(){
     if(m.contexto!=='pessoal') return false;
     if(m.periodo==='Mensal') return movAtivoNoMes(m, mes);
     return m.data && m.data.startsWith(mes);
-  });
+  }).sort((a,b)=>(b.data||'').localeCompare(a.data||''));
   const receitasMes = movsMes.filter(m=>m.tipo==='receita').reduce((s,m)=>s+(m.valor||0),0);
   const despesasMes = movsMes.filter(m=>m.tipo==='despesa').reduce((s,m)=>s+(m.valor||0),0);
   const investMes = movsMes.filter(m=>m.tipo==='investimento').reduce((s,m)=>s+(m.valor||0),0);
