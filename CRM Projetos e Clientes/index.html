@@ -533,7 +533,7 @@ function persistMeta(){ localStorage.setItem(META_KEY, JSON.stringify({metaMensa
 
 // ─── CACHE LOCAL (runtime) ────────────────────────────────────────────────────
 const _meta = loadMeta();
-let data = { leads:[], clientes:[], contratos:[], faturas:[], despesas:[], tarefas:[], financeiroPessoal:[], metaMensal:_meta.metaMensal, currency:_meta.currency };
+let data = { leads:[], clientes:[], contratos:[], faturas:[], despesas:[], tarefas:[], movExtra:[], metaMensal:_meta.metaMensal, currency:_meta.currency };
 
 // ─── FIELD MAPPING (DB snake_case → JS camelCase) ─────────────────────────────
 const mapLead    = r => ({id:r.id, nome:r.nome, nicho:r.nicho, proj:r.proj, status:r.status, valorEstimado:r.valor_estimado?String(r.valor_estimado):'', moeda:r.moeda||'BRL', tipo:r.tipo, followup:r.followup, obs:r.obs, contatoData:r.contato_data, clienteId:r.cliente_id, createdAt:r.created_at});
@@ -542,7 +542,7 @@ const mapCliente = r => ({id:r.id, nome:r.nome, empresa:r.empresa, instagram:r.i
 const mapContrato= r => ({id:r.id, clienteId:r.cliente_id, valor:r.valor, recorrencia:r.recorrencia, dataInicio:r.data_inicio, vencimento:r.vencimento, status:r.status, moeda:r.moeda, diaVencimento:r.dia_vencimento||null, numParcelas:r.num_parcelas||null});
 const mapFatura  = r => ({id:r.id, clienteId:r.cliente_id, contratoId:r.contrato_id, mes:r.mes, valor:r.valor, status:r.status, dataPagamento:r.data_pagamento});
 const mapDespesa = r => ({id:r.id, item:r.item, valor:r.valor, periodo:r.periodo, categoria:r.categoria, data:r.data, dataFim:r.data_fim||null});
-const mapFinPessoal = r => ({id:r.id, tipo:r.tipo, item:r.item, valor:r.valor, categoria:r.categoria, periodo:r.periodo, data:r.data, dataFim:r.data_fim||null});
+const mapMovExtra = r => ({id:r.id, contexto:r.contexto||'empresarial', tipo:r.tipo, item:r.item, valor:r.valor, categoria:r.categoria, periodo:r.periodo, data:r.data, dataFim:r.data_fim||null});
 
 // ─── TOAST ────────────────────────────────────────────────────────────────────
 function toast(msg, type='error'){
@@ -569,7 +569,7 @@ async function initData(){
       sb.from('faturas').select('*'),
       sb.from('despesas').select('*').order('data',{ascending:false}),
       sb.from('tarefas').select('*').order('created_at',{ascending:false}),
-      sb.from('financeiro_pessoal').select('*').order('data',{ascending:false}),
+      sb.from('financeiro_extra').select('*').order('data',{ascending:false}),
     ]);
     if(l.error) throw l.error;
     if(c.error) throw c.error;
@@ -579,7 +579,7 @@ async function initData(){
     data.faturas  = (f.data||[]).map(mapFatura);
     data.despesas = (d.data||[]).map(mapDespesa);
     data.tarefas  = (tr.data||[]).map(mapTarefa);
-    data.financeiroPessoal = (fp.data||[]).map(mapFinPessoal);
+    data.movExtra = (fp.data||[]).map(mapMovExtra);
     render();
   }catch(e){
     document.getElementById('main-content').innerHTML=`<div style="text-align:center;padding:100px 0"><div style="color:var(--red);font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase">Erro ao conectar com Supabase</div><div style="color:var(--text3);font-size:13px;margin-top:10px">${e.message}</div><button class="btn" style="margin-top:20px" onclick="initData()">Tentar novamente</button></div>`;
@@ -664,7 +664,7 @@ function formatCurrency(v){ if(!v&&v!==0) return '—'; return new Intl.NumberFo
 function switchTab(t){
   tab=t;
   ['dashboard','pipeline','clientes','tarefas','financeiro'].forEach(x=>document.getElementById('tab-'+x).classList.toggle('active',t===x));
-  const btns={dashboard:'',pipeline:'+ Novo Lead',clientes:'+ Novo Cliente',tarefas:'+ Nova Tarefa',financeiro:finView==='pessoal'?'+ Nova Movimentação':'+ Nova Despesa'};
+  const btns={dashboard:'',pipeline:'+ Novo Lead',clientes:'+ Novo Cliente',tarefas:'+ Nova Tarefa',financeiro:'+ Nova Movimentação'};
   const btn=document.getElementById('main-btn');
   btn.textContent=btns[t]||'';
   btn.style.visibility=t==='dashboard'?'hidden':'visible';
@@ -674,12 +674,10 @@ function handleMainBtn(){
   if(tab==='pipeline') openLeadForm(null);
   else if(tab==='clientes') openClienteForm();
   else if(tab==='tarefas') openTarefaForm(null);
-  else if(tab==='financeiro') finView==='pessoal'?openMovForm():openExpenseForm();
+  else if(tab==='financeiro') openMovForm();
 }
 function setFinView(v){
   finView = v;
-  const btn=document.getElementById('main-btn');
-  if(btn) btn.textContent = v==='pessoal' ? '+ Nova Movimentação' : '+ Nova Despesa';
   render();
 }
 function setFilter(el,proj){
@@ -1701,7 +1699,16 @@ function renderFinanceiro(){
     if(dep.periodo==='Único'&&dep.data&&dep.data.startsWith(mes)) return s+(dep.valor||0);
     return s;
   },0);
-  const saldoMes = totalRecebido - despesasMes;
+
+  // ── Movimentações extras (receita/despesa avulsa, ex: empréstimo) ─────────
+  const movEmpMes = (data.movExtra||[]).filter(m=>{
+    if(m.contexto!=='empresarial') return false;
+    if(m.periodo==='Mensal') return movAtivoNoMes(m, mes);
+    return m.data && m.data.startsWith(mes);
+  });
+  const receitaExtraMes = movEmpMes.filter(m=>m.tipo==='receita').reduce((s,m)=>s+(m.valor||0),0);
+  const despesaExtraMes = movEmpMes.filter(m=>m.tipo==='despesa').reduce((s,m)=>s+(m.valor||0),0);
+  const saldoMes = (totalRecebido+receitaExtraMes) - (despesasMes+despesaExtraMes);
 
   // ── Acumulado anual ───────────────────────────────────────────────────────
   const receitaAnual = (data.faturas||[]).filter(f=>f.status==='pago'&&f.mes&&f.mes.startsWith(anoStr))
@@ -1722,7 +1729,22 @@ function renderFinanceiro(){
     if(dep.periodo==='Único'&&dep.data&&dep.data.startsWith(anoStr)) return s+(dep.valor||0);
     return s;
   },0);
-  const saldoAnual = receitaAnual - despesasAnual;
+  const somaMovAnual = (tipo) => (data.movExtra||[]).reduce((s,m)=>{
+    if(m.contexto!=='empresarial'||m.tipo!==tipo) return s;
+    if(m.periodo==='Mensal'){
+      let count=0;
+      for(let mm=1; mm<=mesesPassados; mm++){
+        const mc = `${anoStr}-${String(mm).padStart(2,'0')}`;
+        if(movAtivoNoMes(m, mc)) count++;
+      }
+      return s+(m.valor||0)*count;
+    }
+    if(m.data && m.data.startsWith(anoStr)) return s+(m.valor||0);
+    return s;
+  },0);
+  const receitaExtraAnual = somaMovAnual('receita');
+  const despesaExtraAnual = somaMovAnual('despesa');
+  const saldoAnual = (receitaAnual+receitaExtraAnual) - (despesasAnual+despesaExtraAnual);
   const mesesComFatura = [...new Set((data.faturas||[]).filter(f=>f.status==='pago'&&f.mes&&f.mes.startsWith(anoStr)).map(f=>f.mes))].length;
 
   // ── Meta ──────────────────────────────────────────────────────────────────
@@ -1762,13 +1784,13 @@ function renderFinanceiro(){
   <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:28px">
     <div style="background:var(--bg2);padding:20px 22px;border-top:2px solid var(--green)">
       <div style="font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Receita Recebida</div>
-      <div style="font-size:28px;font-weight:900;letter-spacing:-1px;color:var(--green);margin-bottom:6px">${formatCurrency(receitaAnual)}</div>
-      <div style="font-size:12px;color:var(--text3)">${mesesComFatura} ${mesesComFatura===1?'mês':'meses'} com recebimento${metaAnual>0?` · ${metaAnualPct}% da meta anual`:''}</div>
+      <div style="font-size:28px;font-weight:900;letter-spacing:-1px;color:var(--green);margin-bottom:6px">${formatCurrency(receitaAnual+receitaExtraAnual)}</div>
+      <div style="font-size:12px;color:var(--text3)">${mesesComFatura} ${mesesComFatura===1?'mês':'meses'} com recebimento${metaAnual>0?` · ${metaAnualPct}% da meta anual`:''}${receitaExtraAnual>0?` · +${formatCurrency(receitaExtraAnual)} extra`:''}</div>
     </div>
     <div style="background:var(--bg2);padding:20px 22px;border-top:2px solid var(--red)">
       <div style="font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Despesas Anuais</div>
-      <div style="font-size:28px;font-weight:900;letter-spacing:-1px;color:var(--red);margin-bottom:6px">${formatCurrency(despesasAnual)}</div>
-      <div style="font-size:12px;color:var(--text3)">mensais × ${mesesPassados} meses + únicas do ano</div>
+      <div style="font-size:28px;font-weight:900;letter-spacing:-1px;color:var(--red);margin-bottom:6px">${formatCurrency(despesasAnual+despesaExtraAnual)}</div>
+      <div style="font-size:12px;color:var(--text3)">mensais × ${mesesPassados} meses + únicas do ano${despesaExtraAnual>0?` · +${formatCurrency(despesaExtraAnual)} extra`:''}</div>
     </div>
     <div style="background:var(--bg2);padding:20px 22px;border-top:2px solid ${saldoAnual<0?'var(--red)':'var(--terra)'}">
       <div style="font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Saldo Anual</div>
@@ -1782,8 +1804,8 @@ function renderFinanceiro(){
   <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:32px">
     <div style="background:var(--bg2);padding:22px 20px;border-top:2px solid var(--green)">
       <div style="font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Recebido</div>
-      <div style="font-size:26px;font-weight:900;letter-spacing:-1px;color:var(--green);margin-bottom:8px">${formatCurrency(totalRecebido)}</div>
-      <div style="font-size:12px;color:var(--text3)">${recebido.length} cliente${recebido.length!==1?'s':''}</div>
+      <div style="font-size:26px;font-weight:900;letter-spacing:-1px;color:var(--green);margin-bottom:8px">${formatCurrency(totalRecebido+receitaExtraMes)}</div>
+      <div style="font-size:12px;color:var(--text3)">${recebido.length} cliente${recebido.length!==1?'s':''}${receitaExtraMes>0?` · +${formatCurrency(receitaExtraMes)} extra`:''}</div>
     </div>
     <div style="background:var(--bg2);padding:22px 20px;border-top:2px solid var(--blue)">
       <div style="font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">A Receber</div>
@@ -1792,8 +1814,8 @@ function renderFinanceiro(){
     </div>
     <div style="background:var(--bg2);padding:22px 20px;border-top:2px solid var(--red)">
       <div style="font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Despesas</div>
-      <div style="font-size:26px;font-weight:900;letter-spacing:-1px;color:var(--red);margin-bottom:8px">${formatCurrency(despesasMes)}</div>
-      <div style="font-size:12px;color:var(--text3)">${(data.despesas||[]).length} item${(data.despesas||[]).length!==1?'s':''} cadastrado${(data.despesas||[]).length!==1?'s':''}</div>
+      <div style="font-size:26px;font-weight:900;letter-spacing:-1px;color:var(--red);margin-bottom:8px">${formatCurrency(despesasMes+despesaExtraMes)}</div>
+      <div style="font-size:12px;color:var(--text3)">${(data.despesas||[]).length} item${(data.despesas||[]).length!==1?'s':''} cadastrado${(data.despesas||[]).length!==1?'s':''}${despesaExtraMes>0?` · +${formatCurrency(despesaExtraMes)} extra`:''}</div>
     </div>
     <div style="background:var(--bg2);padding:22px 20px;border-top:2px solid ${saldoMes<0?'var(--red)':'var(--terra)'}">
       <div style="font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Saldo do Mês</div>
@@ -1871,7 +1893,7 @@ function renderFinanceiro(){
     return dep.data && dep.data.startsWith(mes);
   });
 
-  h+=label('Despesas');
+  h+=`<div style="display:flex;align-items:center;justify-content:space-between">${label('Despesas Fixas')}<button class="btn btn-ghost" style="font-size:12px;padding:5px 12px;margin-bottom:10px" onclick="openExpenseForm()">+ Nova Despesa Fixa</button></div>`;
   if(despesasVisiveis.length){
     h+=`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;overflow:hidden">
       <table style="width:100%;border-collapse:collapse">
@@ -1899,7 +1921,42 @@ function renderFinanceiro(){
       </tr>`).join('')+
       `</tbody></table></div>`;
   } else {
-    h+=`<div class="empty-state"><div class="empty-icon">💸</div><div class="empty-text">Nenhuma despesa ativa neste período</div></div>`;
+    h+=`<div class="empty-state" style="margin-bottom:32px"><div class="empty-icon">💸</div><div class="empty-text">Nenhuma despesa ativa neste período</div></div>`;
+  }
+
+  // ── MOVIMENTAÇÕES EXTRAS (receita/despesa avulsa, ex: empréstimo) ─────────
+  h+=`<div style="display:flex;align-items:center;justify-content:space-between">${label('Movimentações Extras')}<button class="btn btn-ghost" style="font-size:12px;padding:5px 12px;margin-bottom:10px" onclick="openMovForm()">+ Nova Movimentação</button></div>`;
+  if(movEmpMes.length){
+    h+=`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;overflow:hidden">
+      <table style="width:100%;border-collapse:collapse">
+        <thead><tr style="background:var(--bg3)">
+          <th style="padding:13px 18px;text-align:left;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Tipo</th>
+          <th style="padding:13px 18px;text-align:left;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Descrição</th>
+          <th style="padding:13px 18px;text-align:left;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Valor</th>
+          <th style="padding:13px 18px;text-align:left;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Categoria</th>
+          <th style="padding:13px 18px;text-align:left;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Período</th>
+          <th style="padding:13px 18px;border-bottom:1px solid var(--border)"></th>
+        </tr></thead><tbody>`+
+      movEmpMes.map(m=>{
+        const isReceita = m.tipo==='receita';
+        return `<tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:15px 18px"><span style="font-size:13px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:${isReceita?'var(--green)':'var(--red)'};background:${isReceita?'rgba(93,202,165,0.08)':'rgba(226,75,74,0.08)'};border:1px solid ${isReceita?'rgba(93,202,165,0.2)':'rgba(226,75,74,0.2)'};padding:3px 10px;border-radius:2px">${isReceita?'Receita':'Despesa'}</span></td>
+        <td style="padding:15px 18px;font-size:13px;font-weight:700;color:var(--text)">${m.item}</td>
+        <td style="padding:15px 18px;font-size:14px;font-weight:800;color:${isReceita?'var(--green)':'var(--red)'}">${formatCurrency(m.valor)}</td>
+        <td style="padding:15px 18px;font-size:12px;color:var(--text2)">${m.categoria||'—'}</td>
+        <td style="padding:15px 18px;font-size:12px;color:var(--text2)">${m.periodo}</td>
+        <td style="padding:15px 18px;text-align:right;white-space:nowrap;display:flex;gap:6px;justify-content:flex-end;align-items:center">
+          <button class="btn btn-ghost" style="font-size:12px;padding:4px 11px" onclick="openEditMov('${m.id}')">Editar</button>
+          ${m.periodo==='Mensal'
+            ? `<button class="btn btn-danger" style="font-size:12px;padding:4px 11px" onclick="encerrarMov('${m.id}')">Encerrar</button>`
+            : `<button class="btn btn-danger" style="font-size:12px;padding:4px 11px" onclick="deleteMov('${m.id}')">Remover</button>`
+          }
+        </td>
+      </tr>`;
+      }).join('')+
+      `</tbody></table></div>`;
+  } else {
+    h+=`<div class="empty-state"><div class="empty-icon">🏦</div><div class="empty-text">Nenhuma movimentação extra neste período</div></div>`;
   }
 
   document.getElementById('main-content').innerHTML = h;
@@ -1910,7 +1967,8 @@ function renderFinanceiroPessoal(){
   const mes = finMesStr();
   const anoStr = String(finYear);
 
-  const movsMes = (data.financeiroPessoal||[]).filter(m=>{
+  const movsMes = (data.movExtra||[]).filter(m=>{
+    if(m.contexto!=='pessoal') return false;
     if(m.periodo==='Mensal') return movAtivoNoMes(m, mes);
     return m.data && m.data.startsWith(mes);
   });
@@ -1920,7 +1978,8 @@ function renderFinanceiroPessoal(){
 
   const mesAtual = new Date().getMonth()+1;
   const mesesPassados = finYear < new Date().getFullYear() ? 12 : mesAtual;
-  const somaAnual = (tipo) => (data.financeiroPessoal||[]).reduce((s,m)=>{
+  const somaAnual = (tipo) => (data.movExtra||[]).reduce((s,m)=>{
+    if(m.contexto!=='pessoal') return s;
     if(m.tipo!==tipo) return s;
     if(m.periodo==='Mensal'){
       let count=0;
@@ -2017,7 +2076,7 @@ function renderFinanceiroPessoal(){
 function openMovForm(){
   modal(`<div class="modal" onclick="event.stopPropagation()">
     <div class="modal-divider"></div>
-    <div class="modal-title">Nova Movimentação Pessoal</div>
+    <div class="modal-title">Nova Movimentação ${finView==='pessoal'?'Pessoal':'Empresarial'}</div>
     <div class="form-row"><label class="form-label">Tipo</label>
       <select class="form-input" id="mov-tipo">
         <option value="receita">Receita</option>
@@ -2034,15 +2093,15 @@ function openMovForm(){
 }
 
 async function saveMov(){
-  const payload={tipo:val('mov-tipo')||'despesa',item:val('mov-item')||'Movimentação',valor:parseFloat((val('mov-valor')||'0').replace(',','.'))||0,categoria:val('mov-cat')||'',periodo:val('mov-periodo')||'Único',data:val('mov-data')||new Date().toISOString().slice(0,10)};
-  const {data:row,error}=await sb.from('financeiro_pessoal').insert(payload).select().single();
+  const payload={contexto:finView,tipo:val('mov-tipo')||'despesa',item:val('mov-item')||'Movimentação',valor:parseFloat((val('mov-valor')||'0').replace(',','.'))||0,categoria:val('mov-cat')||'',periodo:val('mov-periodo')||'Único',data:val('mov-data')||new Date().toISOString().slice(0,10)};
+  const {data:row,error}=await sb.from('financeiro_extra').insert(payload).select().single();
   if(error){ toast('Erro ao salvar movimentação: '+error.message); return; }
-  data.financeiroPessoal.unshift(mapFinPessoal(row));
+  data.movExtra.unshift(mapMovExtra(row));
   closeModal(); render(); toast('Movimentação adicionada','success');
 }
 
 function openEditMov(id){
-  const m=data.financeiroPessoal.find(x=>x.id===id); if(!m) return;
+  const m=data.movExtra.find(x=>x.id===id); if(!m) return;
   modal(`<div class="modal" onclick="event.stopPropagation()">
     <div class="modal-divider"></div>
     <div class="modal-title">Editar Movimentação</div>
@@ -2078,21 +2137,21 @@ function openEditMov(id){
 }
 
 async function saveEditMov(id){
-  const m=data.financeiroPessoal.find(x=>x.id===id); if(!m) return;
+  const m=data.movExtra.find(x=>x.id===id); if(!m) return;
   const payload={tipo:val('em_tipo')||m.tipo,item:val('em_item')||m.item,valor:parseFloat((val('em_valor')||'0').replace(',','.'))||m.valor,categoria:val('em_cat')||'',periodo:val('em_periodo')||m.periodo,data:val('em_data')||m.data};
-  const {error}=await sb.from('financeiro_pessoal').update(payload).eq('id',id);
+  const {error}=await sb.from('financeiro_extra').update(payload).eq('id',id);
   if(error){ toast('Erro ao atualizar movimentação'); return; }
   Object.assign(m,{tipo:payload.tipo,item:payload.item,valor:payload.valor,categoria:payload.categoria,periodo:payload.periodo,data:payload.data});
   closeModal(); render(); toast('Movimentação atualizada','success');
 }
 
 async function encerrarMov(id){
-  const m = data.financeiroPessoal.find(x=>x.id===id); if(!m) return;
+  const m = data.movExtra.find(x=>x.id===id); if(!m) return;
   const hoje = new Date();
   const ultimoDia = new Date(hoje.getFullYear(), hoje.getMonth()+1, 0).toISOString().slice(0,10);
   const mesLabel = hoje.toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
   if(!confirm(`Encerrar "${m.item}" ao final de ${mesLabel}?\n\nEla continuará aparecendo nos meses anteriores em que estava ativa.`)) return;
-  const {error}=await sb.from('financeiro_pessoal').update({data_fim:ultimoDia}).eq('id',id);
+  const {error}=await sb.from('financeiro_extra').update({data_fim:ultimoDia}).eq('id',id);
   if(error){ toast('Erro ao encerrar movimentação'); return; }
   m.dataFim=ultimoDia;
   render(); toast('Movimentação encerrada','success');
@@ -2100,9 +2159,9 @@ async function encerrarMov(id){
 
 async function deleteMov(id){
   if(!confirm('Remover esta movimentação?')) return;
-  const {error}=await sb.from('financeiro_pessoal').delete().eq('id',id);
+  const {error}=await sb.from('financeiro_extra').delete().eq('id',id);
   if(error){ toast('Erro ao remover movimentação'); return; }
-  data.financeiroPessoal=data.financeiroPessoal.filter(x=>x.id!==id); render();
+  data.movExtra=data.movExtra.filter(x=>x.id!==id); render();
 }
 
 function openExpenseForm(){
