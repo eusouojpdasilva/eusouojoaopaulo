@@ -524,6 +524,7 @@ const TASK_COR   = {'a-fazer':'var(--text3)','andamento':'var(--blue)','revisao'
 // ─── STATE ────────────────────────────────────────────────────────────────────
 let tab = 'pipeline';
 let projFilter = 'all';
+let finView = 'empresarial'; // 'empresarial' | 'pessoal'
 
 // ─── META LOCAL (sem tabela no Supabase) ─────────────────────────────────────
 const META_KEY = 'jp_crm_meta';
@@ -532,7 +533,7 @@ function persistMeta(){ localStorage.setItem(META_KEY, JSON.stringify({metaMensa
 
 // ─── CACHE LOCAL (runtime) ────────────────────────────────────────────────────
 const _meta = loadMeta();
-let data = { leads:[], clientes:[], contratos:[], faturas:[], despesas:[], tarefas:[], metaMensal:_meta.metaMensal, currency:_meta.currency };
+let data = { leads:[], clientes:[], contratos:[], faturas:[], despesas:[], tarefas:[], financeiroPessoal:[], metaMensal:_meta.metaMensal, currency:_meta.currency };
 
 // ─── FIELD MAPPING (DB snake_case → JS camelCase) ─────────────────────────────
 const mapLead    = r => ({id:r.id, nome:r.nome, nicho:r.nicho, proj:r.proj, status:r.status, valorEstimado:r.valor_estimado?String(r.valor_estimado):'', moeda:r.moeda||'BRL', tipo:r.tipo, followup:r.followup, obs:r.obs, contatoData:r.contato_data, clienteId:r.cliente_id, createdAt:r.created_at});
@@ -541,6 +542,7 @@ const mapCliente = r => ({id:r.id, nome:r.nome, empresa:r.empresa, instagram:r.i
 const mapContrato= r => ({id:r.id, clienteId:r.cliente_id, valor:r.valor, recorrencia:r.recorrencia, dataInicio:r.data_inicio, vencimento:r.vencimento, status:r.status, moeda:r.moeda, diaVencimento:r.dia_vencimento||null, numParcelas:r.num_parcelas||null});
 const mapFatura  = r => ({id:r.id, clienteId:r.cliente_id, contratoId:r.contrato_id, mes:r.mes, valor:r.valor, status:r.status, dataPagamento:r.data_pagamento});
 const mapDespesa = r => ({id:r.id, item:r.item, valor:r.valor, periodo:r.periodo, categoria:r.categoria, data:r.data, dataFim:r.data_fim||null});
+const mapFinPessoal = r => ({id:r.id, tipo:r.tipo, item:r.item, valor:r.valor, categoria:r.categoria, periodo:r.periodo, data:r.data, dataFim:r.data_fim||null});
 
 // ─── TOAST ────────────────────────────────────────────────────────────────────
 function toast(msg, type='error'){
@@ -560,13 +562,14 @@ function showLoading(){
 async function initData(){
   showLoading();
   try{
-    const [l,c,ct,f,d,tr] = await Promise.all([
+    const [l,c,ct,f,d,tr,fp] = await Promise.all([
       sb.from('leads').select('*').order('created_at',{ascending:false}),
       sb.from('clientes').select('*').order('created_at',{ascending:false}),
       sb.from('contratos').select('*').order('created_at',{ascending:false}),
       sb.from('faturas').select('*'),
       sb.from('despesas').select('*').order('data',{ascending:false}),
       sb.from('tarefas').select('*').order('created_at',{ascending:false}),
+      sb.from('financeiro_pessoal').select('*').order('data',{ascending:false}),
     ]);
     if(l.error) throw l.error;
     if(c.error) throw c.error;
@@ -576,6 +579,7 @@ async function initData(){
     data.faturas  = (f.data||[]).map(mapFatura);
     data.despesas = (d.data||[]).map(mapDespesa);
     data.tarefas  = (tr.data||[]).map(mapTarefa);
+    data.financeiroPessoal = (fp.data||[]).map(mapFinPessoal);
     render();
   }catch(e){
     document.getElementById('main-content').innerHTML=`<div style="text-align:center;padding:100px 0"><div style="color:var(--red);font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase">Erro ao conectar com Supabase</div><div style="color:var(--text3);font-size:13px;margin-top:10px">${e.message}</div><button class="btn" style="margin-top:20px" onclick="initData()">Tentar novamente</button></div>`;
@@ -660,7 +664,7 @@ function formatCurrency(v){ if(!v&&v!==0) return '—'; return new Intl.NumberFo
 function switchTab(t){
   tab=t;
   ['dashboard','pipeline','clientes','tarefas','financeiro'].forEach(x=>document.getElementById('tab-'+x).classList.toggle('active',t===x));
-  const btns={dashboard:'',pipeline:'+ Novo Lead',clientes:'+ Novo Cliente',tarefas:'+ Nova Tarefa',financeiro:'+ Nova Despesa'};
+  const btns={dashboard:'',pipeline:'+ Novo Lead',clientes:'+ Novo Cliente',tarefas:'+ Nova Tarefa',financeiro:finView==='pessoal'?'+ Nova Movimentação':'+ Nova Despesa'};
   const btn=document.getElementById('main-btn');
   btn.textContent=btns[t]||'';
   btn.style.visibility=t==='dashboard'?'hidden':'visible';
@@ -670,7 +674,13 @@ function handleMainBtn(){
   if(tab==='pipeline') openLeadForm(null);
   else if(tab==='clientes') openClienteForm();
   else if(tab==='tarefas') openTarefaForm(null);
-  else if(tab==='financeiro') openExpenseForm();
+  else if(tab==='financeiro') finView==='pessoal'?openMovForm():openExpenseForm();
+}
+function setFinView(v){
+  finView = v;
+  const btn=document.getElementById('main-btn');
+  if(btn) btn.textContent = v==='pessoal' ? '+ Nova Movimentação' : '+ Nova Despesa';
+  render();
 }
 function setFilter(el,proj){
   projFilter=proj;
@@ -1623,7 +1633,37 @@ async function marcarVencido(clienteId){
   render();
 }
 
+function finSectionLabel(txt){ return `<div style="font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);margin-bottom:10px;display:flex;align-items:center;gap:10px"><span style="width:18px;height:1px;background:var(--terra);display:inline-block"></span>${txt}</div>`; }
+function finViewToggleHtml(){
+  return `<div style="display:flex;gap:8px;margin-bottom:24px">
+    <button class="pill" style="${finView==='empresarial'?'border-color:var(--terra);color:var(--terra);background:var(--terra7)':''}" onclick="setFinView('empresarial')">Empresarial</button>
+    <button class="pill" style="${finView==='pessoal'?'border-color:var(--amber);color:var(--amber);background:rgba(239,159,39,0.08)':''}" onclick="setFinView('pessoal')">Pessoal</button>
+  </div>`;
+}
+function finPeriodoSelectHtml(mesAtualStr){
+  let opts = '';
+  for(let y=2027; y>=2026; y--){
+    for(let m=12; m>=1; m--){
+      const v=`${y}-${String(m).padStart(2,'0')}`;
+      opts+=`<option value="${v}" ${v===mesAtualStr?'selected':''}>${MESES[m-1]} ${y}</option>`;
+    }
+  }
+  return `<div style="display:flex;align-items:center;gap:12px;margin-bottom:28px">
+    <span style="font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3)">Período</span>
+    <select onchange="setFinPeriodo(this.value.split('-')[0],this.value.split('-')[1])" style="background:var(--bg2);border:1px solid var(--border);color:var(--text);font-family:'Raleway',sans-serif;font-size:12px;font-weight:700;padding:7px 14px;border-radius:4px;outline:none;cursor:pointer">${opts}</select>
+    <span style="font-size:13px;color:var(--text3)">${MESES[finMonth-1]} ${finYear}</span>
+  </div>`;
+}
+function movAtivoNoMes(m, mesFiltro){
+  const inicio = m.data ? m.data.slice(0,7) : null;
+  const fim = m.dataFim ? m.dataFim.slice(0,7) : null;
+  if(inicio && inicio > mesFiltro) return false;
+  if(fim && fim < mesFiltro) return false;
+  return true;
+}
+
 function renderFinanceiro(){
+  if(finView==='pessoal') return renderFinanceiroPessoal();
   const mes = finMesStr();
   const anoStr = String(finYear);
 
@@ -1693,27 +1733,11 @@ function renderFinanceiro(){
   const metaAnualPct = metaAnual>0 ? Math.min(Math.round((receitaAnual/metaAnual)*100),100) : 0;
   const metaCor = meta===0?'var(--text2)':metaAtingida?'var(--green)':'var(--red)';
 
-  // ── Seletor de período ────────────────────────────────────────────────────
-  let periodoOpts = '';
-  for(let y=2027; y>=2026; y--){
-    for(let m=12; m>=1; m--){
-      const v=`${y}-${String(m).padStart(2,'0')}`;
-      periodoOpts+=`<option value="${v}" ${v===mes?'selected':''}>${MESES[m-1]} ${y}</option>`;
-    }
-  }
+  const label = finSectionLabel;
 
-  // ── Formata input de valor ────────────────────────────────────────────────
-  // formatCurrency já usa pt-BR (vírgula decimal)
-
-  const label = (txt) => `<div style="font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);margin-bottom:10px;display:flex;align-items:center;gap:10px"><span style="width:18px;height:1px;background:var(--terra);display:inline-block"></span>${txt}</div>`;
-
-  let h = `
-  <!-- SELETOR -->
-  <div style="display:flex;align-items:center;gap:12px;margin-bottom:28px">
-    <span style="font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3)">Período</span>
-    <select onchange="setFinPeriodo(this.value.split('-')[0],this.value.split('-')[1])" style="background:var(--bg2);border:1px solid var(--border);color:var(--text);font-family:'Raleway',sans-serif;font-size:12px;font-weight:700;padding:7px 14px;border-radius:4px;outline:none;cursor:pointer">${periodoOpts}</select>
-    <span style="font-size:13px;color:var(--text3)">${MESES[finMonth-1]} ${finYear}</span>
-  </div>
+  let h = finViewToggleHtml();
+  h += finPeriodoSelectHtml(mes);
+  h += `
 
   <!-- META MENSAL -->
   ${label('Meta Mensal — '+MESES[finMonth-1]+' '+finYear)}
@@ -1879,6 +1903,206 @@ function renderFinanceiro(){
   }
 
   document.getElementById('main-content').innerHTML = h;
+}
+
+// ─── FINANCEIRO PESSOAL ────────────────────────────────────────────────────────
+function renderFinanceiroPessoal(){
+  const mes = finMesStr();
+  const anoStr = String(finYear);
+
+  const movsMes = (data.financeiroPessoal||[]).filter(m=>{
+    if(m.periodo==='Mensal') return movAtivoNoMes(m, mes);
+    return m.data && m.data.startsWith(mes);
+  });
+  const receitasMes = movsMes.filter(m=>m.tipo==='receita').reduce((s,m)=>s+(m.valor||0),0);
+  const despesasMes = movsMes.filter(m=>m.tipo==='despesa').reduce((s,m)=>s+(m.valor||0),0);
+  const saldoMes = receitasMes - despesasMes;
+
+  const mesAtual = new Date().getMonth()+1;
+  const mesesPassados = finYear < new Date().getFullYear() ? 12 : mesAtual;
+  const somaAnual = (tipo) => (data.financeiroPessoal||[]).reduce((s,m)=>{
+    if(m.tipo!==tipo) return s;
+    if(m.periodo==='Mensal'){
+      let count=0;
+      for(let mm=1; mm<=mesesPassados; mm++){
+        const mc = `${anoStr}-${String(mm).padStart(2,'0')}`;
+        if(movAtivoNoMes(m, mc)) count++;
+      }
+      return s+(m.valor||0)*count;
+    }
+    if(m.data && m.data.startsWith(anoStr)) return s+(m.valor||0);
+    return s;
+  },0);
+  const receitaAnual = somaAnual('receita');
+  const despesaAnual = somaAnual('despesa');
+  const saldoAnual = receitaAnual - despesaAnual;
+
+  const label = finSectionLabel;
+  let h = finViewToggleHtml();
+  h += finPeriodoSelectHtml(mes);
+
+  h += `
+  <!-- ACUMULADO ANUAL -->
+  ${label('Balanço Pessoal Anual — '+finYear)}
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:28px">
+    <div style="background:var(--bg2);padding:20px 22px;border-top:2px solid var(--green)">
+      <div style="font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Receitas do Ano</div>
+      <div style="font-size:28px;font-weight:900;letter-spacing:-1px;color:var(--green);margin-bottom:6px">${formatCurrency(receitaAnual)}</div>
+    </div>
+    <div style="background:var(--bg2);padding:20px 22px;border-top:2px solid var(--red)">
+      <div style="font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Despesas do Ano</div>
+      <div style="font-size:28px;font-weight:900;letter-spacing:-1px;color:var(--red);margin-bottom:6px">${formatCurrency(despesaAnual)}</div>
+    </div>
+    <div style="background:var(--bg2);padding:20px 22px;border-top:2px solid ${saldoAnual<0?'var(--red)':'var(--amber)'}">
+      <div style="font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Saldo Anual</div>
+      <div style="font-size:28px;font-weight:900;letter-spacing:-1px;color:${saldoAnual<0?'var(--red)':'var(--amber)'};margin-bottom:6px">${formatCurrency(saldoAnual)}</div>
+    </div>
+  </div>
+
+  <!-- BALANÇO DO MÊS -->
+  ${label('Balanço Pessoal do Mês — '+MESES[finMonth-1]+' '+finYear)}
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:32px">
+    <div style="background:var(--bg2);padding:22px 20px;border-top:2px solid var(--green)">
+      <div style="font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Receitas</div>
+      <div style="font-size:26px;font-weight:900;letter-spacing:-1px;color:var(--green)">${formatCurrency(receitasMes)}</div>
+    </div>
+    <div style="background:var(--bg2);padding:22px 20px;border-top:2px solid var(--red)">
+      <div style="font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Despesas</div>
+      <div style="font-size:26px;font-weight:900;letter-spacing:-1px;color:var(--red)">${formatCurrency(despesasMes)}</div>
+    </div>
+    <div style="background:var(--bg2);padding:22px 20px;border-top:2px solid ${saldoMes<0?'var(--red)':'var(--amber)'}">
+      <div style="font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Saldo do Mês</div>
+      <div style="font-size:26px;font-weight:900;letter-spacing:-1px;color:${saldoMes<0?'var(--red)':'var(--amber)'}">${formatCurrency(saldoMes)}</div>
+    </div>
+  </div>`;
+
+  // ── LANÇAMENTOS ──────────────────────────────────────────────────────────
+  h += label('Lançamentos — '+MESES[finMonth-1]+' '+finYear);
+  if(movsMes.length){
+    h+=`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;overflow:hidden">
+      <table style="width:100%;border-collapse:collapse">
+        <thead><tr style="background:var(--bg3)">
+          <th style="padding:13px 18px;text-align:left;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Tipo</th>
+          <th style="padding:13px 18px;text-align:left;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Descrição</th>
+          <th style="padding:13px 18px;text-align:left;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Valor</th>
+          <th style="padding:13px 18px;text-align:left;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Categoria</th>
+          <th style="padding:13px 18px;text-align:left;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Período</th>
+          <th style="padding:13px 18px;border-bottom:1px solid var(--border)"></th>
+        </tr></thead><tbody>`+
+      movsMes.map(m=>{
+        const isReceita = m.tipo==='receita';
+        return `<tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:15px 18px"><span style="font-size:13px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:${isReceita?'var(--green)':'var(--red)'};background:${isReceita?'rgba(93,202,165,0.08)':'rgba(226,75,74,0.08)'};border:1px solid ${isReceita?'rgba(93,202,165,0.2)':'rgba(226,75,74,0.2)'};padding:3px 10px;border-radius:2px">${isReceita?'Receita':'Despesa'}</span></td>
+        <td style="padding:15px 18px;font-size:13px;font-weight:700;color:var(--text)">${m.item}</td>
+        <td style="padding:15px 18px;font-size:14px;font-weight:800;color:${isReceita?'var(--green)':'var(--red)'}">${formatCurrency(m.valor)}</td>
+        <td style="padding:15px 18px;font-size:12px;color:var(--text2)">${m.categoria||'—'}</td>
+        <td style="padding:15px 18px;font-size:12px;color:var(--text2)">${m.periodo}</td>
+        <td style="padding:15px 18px;text-align:right;white-space:nowrap;display:flex;gap:6px;justify-content:flex-end;align-items:center">
+          <button class="btn btn-ghost" style="font-size:12px;padding:4px 11px" onclick="openEditMov('${m.id}')">Editar</button>
+          ${m.periodo==='Mensal'
+            ? `<button class="btn btn-danger" style="font-size:12px;padding:4px 11px" onclick="encerrarMov('${m.id}')">Encerrar</button>`
+            : `<button class="btn btn-danger" style="font-size:12px;padding:4px 11px" onclick="deleteMov('${m.id}')">Remover</button>`
+          }
+        </td>
+      </tr>`;
+      }).join('')+
+      `</tbody></table></div>`;
+  } else {
+    h+=`<div class="empty-state"><div class="empty-icon">👛</div><div class="empty-text">Nenhuma movimentação pessoal neste período</div></div>`;
+  }
+
+  document.getElementById('main-content').innerHTML = h;
+}
+
+function openMovForm(){
+  modal(`<div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-divider"></div>
+    <div class="modal-title">Nova Movimentação Pessoal</div>
+    <div class="form-row"><label class="form-label">Tipo</label>
+      <select class="form-input" id="mov-tipo">
+        <option value="receita">Receita</option>
+        <option value="despesa">Despesa</option>
+      </select>
+    </div>
+    <div class="form-row"><label class="form-label">Descrição</label><input class="form-input" id="mov-item" placeholder="Ex: Empréstimo pessoal"></div>
+    <div class="form-row"><label class="form-label">Valor</label><input class="form-input" id="mov-valor" placeholder="0.00"></div>
+    <div class="form-row"><label class="form-label">Categoria</label><input class="form-input" id="mov-cat" placeholder="Ex: Empréstimo, Salário, Aluguel..."></div>
+    <div class="form-row"><label class="form-label">Período</label><select class="form-input" id="mov-periodo"><option>Único</option><option>Mensal</option></select></div>
+    <div class="form-row"><label class="form-label">Data</label><input class="form-input" type="date" id="mov-data"></div>
+    <div class="form-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn" onclick="saveMov()">Adicionar</button></div>
+  </div>`);
+}
+
+async function saveMov(){
+  const payload={tipo:val('mov-tipo')||'despesa',item:val('mov-item')||'Movimentação',valor:parseFloat((val('mov-valor')||'0').replace(',','.'))||0,categoria:val('mov-cat')||'',periodo:val('mov-periodo')||'Único',data:val('mov-data')||new Date().toISOString().slice(0,10)};
+  const {data:row,error}=await sb.from('financeiro_pessoal').insert(payload).select().single();
+  if(error){ toast('Erro ao salvar movimentação: '+error.message); return; }
+  data.financeiroPessoal.unshift(mapFinPessoal(row));
+  closeModal(); render(); toast('Movimentação adicionada','success');
+}
+
+function openEditMov(id){
+  const m=data.financeiroPessoal.find(x=>x.id===id); if(!m) return;
+  modal(`<div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-divider"></div>
+    <div class="modal-title">Editar Movimentação</div>
+    <div class="form-row"><label class="form-label">Tipo</label>
+      <select class="form-input" id="em_tipo">
+        <option value="receita" ${m.tipo==='receita'?'selected':''}>Receita</option>
+        <option value="despesa" ${m.tipo==='despesa'?'selected':''}>Despesa</option>
+      </select>
+    </div>
+    <div class="form-row"><label class="form-label">Descrição</label>
+      <input class="form-input" id="em_item" value="${m.item||''}">
+    </div>
+    <div class="form-row"><label class="form-label">Valor</label>
+      <input class="form-input" id="em_valor" value="${m.valor||''}">
+    </div>
+    <div class="form-row"><label class="form-label">Categoria</label>
+      <input class="form-input" id="em_cat" value="${m.categoria||''}">
+    </div>
+    <div class="form-row"><label class="form-label">Período</label>
+      <select class="form-input" id="em_periodo">
+        <option ${m.periodo==='Único'?'selected':''}>Único</option>
+        <option ${m.periodo==='Mensal'?'selected':''}>Mensal</option>
+      </select>
+    </div>
+    <div class="form-row"><label class="form-label">Data</label>
+      <input class="form-input" type="date" id="em_data" value="${m.data||''}">
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn" onclick="saveEditMov('${id}')">Salvar</button>
+    </div>
+  </div>`);
+}
+
+async function saveEditMov(id){
+  const m=data.financeiroPessoal.find(x=>x.id===id); if(!m) return;
+  const payload={tipo:val('em_tipo')||m.tipo,item:val('em_item')||m.item,valor:parseFloat((val('em_valor')||'0').replace(',','.'))||m.valor,categoria:val('em_cat')||'',periodo:val('em_periodo')||m.periodo,data:val('em_data')||m.data};
+  const {error}=await sb.from('financeiro_pessoal').update(payload).eq('id',id);
+  if(error){ toast('Erro ao atualizar movimentação'); return; }
+  Object.assign(m,{tipo:payload.tipo,item:payload.item,valor:payload.valor,categoria:payload.categoria,periodo:payload.periodo,data:payload.data});
+  closeModal(); render(); toast('Movimentação atualizada','success');
+}
+
+async function encerrarMov(id){
+  const m = data.financeiroPessoal.find(x=>x.id===id); if(!m) return;
+  const hoje = new Date();
+  const ultimoDia = new Date(hoje.getFullYear(), hoje.getMonth()+1, 0).toISOString().slice(0,10);
+  const mesLabel = hoje.toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
+  if(!confirm(`Encerrar "${m.item}" ao final de ${mesLabel}?\n\nEla continuará aparecendo nos meses anteriores em que estava ativa.`)) return;
+  const {error}=await sb.from('financeiro_pessoal').update({data_fim:ultimoDia}).eq('id',id);
+  if(error){ toast('Erro ao encerrar movimentação'); return; }
+  m.dataFim=ultimoDia;
+  render(); toast('Movimentação encerrada','success');
+}
+
+async function deleteMov(id){
+  if(!confirm('Remover esta movimentação?')) return;
+  const {error}=await sb.from('financeiro_pessoal').delete().eq('id',id);
+  if(error){ toast('Erro ao remover movimentação'); return; }
+  data.financeiroPessoal=data.financeiroPessoal.filter(x=>x.id!==id); render();
 }
 
 function openExpenseForm(){
