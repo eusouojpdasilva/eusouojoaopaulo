@@ -175,7 +175,8 @@ const SUPABASE_URL = 'https://swiszowpfurkegrnbwfj.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN3aXN6b3dwZnVya2Vncm5id2ZqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNjI4MjksImV4cCI6MjA5NTczODgyOX0.gRroKE-86kI5O_8cMwtg8-l2qqWWQisxwk6GYlvz0es';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const CATEGORIAS = ['Alimentação','Transporte','Mercado','Lazer','Saúde','Ferramentas','Assinaturas','Outros'];
+const CATEGORIAS_PESSOAL = ['Alimentação','Supermercado','Transporte','Cartão de Crédito','Cursos e Treinamentos','Assinaturas','Saúde','Lazer','Empréstimo','Acordo de Dívida','Investimento','Salário','Outros'];
+const CATEGORIAS_EMPRESARIAL = ['Ferramenta','Ferramenta de IA','Marketing','Cursos e Treinamentos','Contabilidade','Impostos','Empréstimo','Investimento','Fornecedor','Outros'];
 
 let tipo = 'despesa';
 let contexto = 'pessoal';
@@ -241,10 +242,14 @@ function setTipo(v){
 function setContexto(v){
   contexto=v;
   document.querySelectorAll('#seg-contexto .seg-btn').forEach(b=>b.classList.toggle('active', b.dataset.v===v));
+  categoriaAtiva='';
+  document.getElementById('mov-cat').value='';
+  renderChips();
 }
 function renderChips(){
+  const lista = contexto==='pessoal' ? CATEGORIAS_PESSOAL : CATEGORIAS_EMPRESARIAL;
   const el = document.getElementById('chips-categoria');
-  el.innerHTML = CATEGORIAS.map(c=>`<button type="button" class="chip ${categoriaAtiva===c?'active':''}" onclick="selecionarCategoria('${c}')">${c}</button>`).join('');
+  el.innerHTML = lista.map(c=>`<button type="button" class="chip ${categoriaAtiva===c?'active':''}" onclick="selecionarCategoria('${c}')">${c}</button>`).join('');
 }
 function selecionarCategoria(c){
   categoriaAtiva = categoriaAtiva===c ? '' : c;

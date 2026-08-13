@@ -520,6 +520,14 @@ const ST_LABEL = {novo:'Novo',contato:'Em Contato',proposta:'Proposta',fechado:'
 const TASK_STATUSES = ['a-fazer','andamento','revisao','concluido'];
 const TASK_LABEL = {'a-fazer':'A Fazer','andamento':'Em Andamento','revisao':'Em Revisão','concluido':'Concluído'};
 const TASK_COR   = {'a-fazer':'var(--text3)','andamento':'var(--blue)','revisao':'var(--amber)','concluido':'var(--green)'};
+const CATEGORIAS_PESSOAL = ['Alimentação','Supermercado','Transporte','Cartão de Crédito','Cursos e Treinamentos','Assinaturas','Saúde','Lazer','Empréstimo','Acordo de Dívida','Investimento','Salário','Outros'];
+const CATEGORIAS_EMPRESARIAL = ['Ferramenta','Ferramenta de IA','Marketing','Cursos e Treinamentos','Contabilidade','Impostos','Empréstimo','Investimento','Fornecedor','Outros'];
+function categoriaChipsHtml(contexto, selected, inputId){
+  const lista = contexto==='pessoal' ? CATEGORIAS_PESSOAL : CATEGORIAS_EMPRESARIAL;
+  return `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">${lista.map(c=>
+    `<button type="button" class="btn btn-ghost" style="font-size:11px;padding:4px 11px;${c===selected?'border-color:var(--terra);color:var(--terra);background:var(--terra7)':''}" onclick="document.getElementById('${inputId}').value='${c}'; this.parentElement.querySelectorAll('button').forEach(b=>b.style.cssText='font-size:11px;padding:4px 11px'); this.style.cssText='font-size:11px;padding:4px 11px;border-color:var(--terra);color:var(--terra);background:var(--terra7)';">${c}</button>`
+  ).join('')}</div>`;
+}
 
 // ─── STATE ────────────────────────────────────────────────────────────────────
 let tab = 'pipeline';
@@ -2266,7 +2274,9 @@ function openMovForm(){
     </div>
     <div class="form-row"><label class="form-label">Descrição</label><input class="form-input" id="mov-item" placeholder="Ex: Empréstimo pessoal"></div>
     <div class="form-row"><label class="form-label">Valor</label><input class="form-input" id="mov-valor" oninput="maskMoeda(this)" placeholder="0,00"></div>
-    <div class="form-row"><label class="form-label">Categoria</label><input class="form-input" id="mov-cat" placeholder="Ex: Empréstimo, Salário, Aluguel..."></div>
+    <div class="form-row"><label class="form-label">Categoria</label>
+      ${categoriaChipsHtml(finView, '', 'mov-cat')}
+      <input class="form-input" id="mov-cat" placeholder="Ou digite uma categoria"></div>
     <div class="form-row"><label class="form-label">Período</label><select class="form-input" id="mov-periodo"><option>Único</option><option>Mensal</option></select></div>
     <div class="form-row"><label class="form-label">Data</label><input class="form-input" type="date" id="mov-data"></div>
     <div class="form-actions"><button class="btn btn-ghost" onclick="closeModal()">Cancelar</button><button class="btn" onclick="saveMov()">Adicionar</button></div>
@@ -2300,6 +2310,7 @@ function openEditMov(id){
       <input class="form-input" id="em_valor" oninput="maskMoeda(this)" value="${formatMoedaInput(m.valor)}">
     </div>
     <div class="form-row"><label class="form-label">Categoria</label>
+      ${categoriaChipsHtml(m.contexto, m.categoria, 'em_cat')}
       <input class="form-input" id="em_cat" value="${m.categoria||''}">
     </div>
     <div class="form-row"><label class="form-label">Período</label>
