@@ -537,7 +537,7 @@ let data = { leads:[], clientes:[], contratos:[], faturas:[], despesas:[], taref
 
 // ─── FIELD MAPPING (DB snake_case → JS camelCase) ─────────────────────────────
 const mapLead    = r => ({id:r.id, nome:r.nome, nicho:r.nicho, proj:r.proj, status:r.status, valorEstimado:r.valor_estimado?String(r.valor_estimado):'', moeda:r.moeda||'BRL', tipo:r.tipo, followup:r.followup, obs:r.obs, contatoData:r.contato_data, clienteId:r.cliente_id, createdAt:r.created_at});
-const mapTarefa  = r => ({id:r.id, clienteId:r.cliente_id, titulo:r.titulo, obs:r.obs||'', status:r.status||'a-fazer', dataInicio:r.data_inicio||'', dataEntrega:r.data_entrega||'', checklist:r.checklist||[], createdAt:r.created_at});
+const mapTarefa  = r => ({id:r.id, clienteId:r.cliente_id, leadId:r.lead_id||null, titulo:r.titulo, obs:r.obs||'', status:r.status||'a-fazer', dataInicio:r.data_inicio||'', dataEntrega:r.data_entrega||'', checklist:r.checklist||[], createdAt:r.created_at});
 const mapCliente = r => ({id:r.id, nome:r.nome, empresa:r.empresa, instagram:r.instagram, proj:r.proj, status:r.status, comoConheceu:r.como_conheceu, observacao:r.observacao, leadId:r.lead_id, av:r.av, createdAt:r.created_at, cidade:r.cidade||'', estado:r.estado||'', pais:r.pais||'Brasil'});
 const mapContrato= r => ({id:r.id, clienteId:r.cliente_id, valor:r.valor, recorrencia:r.recorrencia, dataInicio:r.data_inicio, vencimento:r.vencimento, status:r.status, moeda:r.moeda, diaVencimento:r.dia_vencimento||null, numParcelas:r.num_parcelas||null});
 const mapFatura  = r => ({id:r.id, clienteId:r.cliente_id, contratoId:r.contrato_id, mes:r.mes, valor:r.valor, status:r.status, dataPagamento:r.data_pagamento});
@@ -1395,9 +1395,10 @@ async function saveContrato(clienteId){
 function renderTarefas(){
   const hoje = new Date().toISOString().slice(0,10);
   const clienteIds = new Set(filtered(data.clientes).map(c=>c.id));
+  const leadIds = new Set(filtered(data.leads).map(l=>l.id));
   const tarefas = projFilter==='all'
     ? data.tarefas
-    : data.tarefas.filter(t=>!t.clienteId||clienteIds.has(t.clienteId));
+    : data.tarefas.filter(t=>(!t.clienteId&&!t.leadId)||clienteIds.has(t.clienteId)||leadIds.has(t.leadId));
 
   // contadores por status para o header
   const tot = tarefas.length;
@@ -1429,6 +1430,7 @@ function renderTarefas(){
     if(!cols.length) h+=`<div class="empty-col">Vazio</div>`;
     cols.forEach(t=>{
       const cli = data.clientes.find(c=>c.id===t.clienteId);
+      const lead = t.leadId ? data.leads.find(l=>l.id===t.leadId) : null;
       const checkTotal = t.checklist.length;
       const checkFeito = t.checklist.filter(i=>i.feito).length;
       const checkPct   = checkTotal>0?Math.round((checkFeito/checkTotal)*100):0;
@@ -1440,6 +1442,7 @@ function renderTarefas(){
         ondragstart="event.dataTransfer.setData('text/plain','${t.id}')"
         onclick="openTarefaForm('${t.id}')">
         ${cli?`<div class="card-proj"><span class="badge ${BADGE[cli.proj]}">${cli.empresa||cli.nome}</span></div>`:''}
+        ${lead?`<div class="card-proj"><span class="badge ${BADGE[lead.proj]}">${lead.nome}</span><span style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--amber);background:rgba(239,159,39,0.1);border:1px solid rgba(239,159,39,0.25);padding:2px 7px;border-radius:2px">Lead</span></div>`:''}
         <div class="card-name" style="margin-bottom:${checkTotal>0||t.obs?'8px':'10px'}">${t.titulo}</div>
         ${t.obs?`<div style="font-size:12px;color:var(--text3);margin-bottom:8px;line-height:1.4;overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:break-word">${t.obs}</div>`:''}
         ${checkTotal>0?`
@@ -1518,7 +1521,11 @@ function openTarefaForm(id){
   window._ckl = t ? JSON.parse(JSON.stringify(t.checklist)) : [];
   const cliOptions = data.clientes
     .filter(c=>!isClienteVencido(c))
-    .map(c=>`<option value="${c.id}" ${t&&t.clienteId===c.id?'selected':''}>${c.nome}${c.empresa?' — '+c.empresa:''}</option>`)
+    .map(c=>`<option value="cliente:${c.id}" ${t&&t.clienteId===c.id?'selected':''}>${c.nome}${c.empresa?' — '+c.empresa:''}</option>`)
+    .join('');
+  const leadOptions = data.leads
+    .filter(l=>!l.clienteId)
+    .map(l=>`<option value="lead:${l.id}" ${t&&t.leadId===l.id?'selected':''}>${l.nome}${l.nicho?' — '+l.nicho:''}</option>`)
     .join('');
 
   modal(`<div class="modal" style="width:620px;max-width:96vw" onclick="event.stopPropagation()">
@@ -1526,10 +1533,11 @@ function openTarefaForm(id){
     <div class="modal-title">${t?'Editar Tarefa':'Nova Tarefa'}</div>
 
     <div class="form-row">
-      <label class="form-label">Cliente</label>
-      <select class="form-input" id="tf_cli">
-        <option value="">Sem cliente vinculado</option>
-        ${cliOptions}
+      <label class="form-label">Vincular a</label>
+      <select class="form-input" id="tf_vinculo">
+        <option value="">Sem vínculo</option>
+        <optgroup label="Clientes">${cliOptions}</optgroup>
+        <optgroup label="Leads (Pipeline)">${leadOptions}</optgroup>
       </select>
     </div>
 
@@ -1581,9 +1589,17 @@ function openTarefaForm(id){
   setTimeout(()=>{ _renderCkl(); window._chkRec(); },0);
 }
 
+function _parseVinculoTarefa(){
+  const v = val('tf_vinculo');
+  if(v.startsWith('cliente:')) return {cliente_id:v.slice(8), lead_id:null};
+  if(v.startsWith('lead:')) return {cliente_id:null, lead_id:v.slice(5)};
+  return {cliente_id:null, lead_id:null};
+}
+
 async function saveTarefa(){
   const titulo=val('tf_titulo'); if(!titulo){ toast('Informe o título da tarefa'); return; }
-  const payload={cliente_id:val('tf_cli')||null,titulo,obs:val('tf_obs'),status:val('tf_status')||'a-fazer',data_inicio:val('tf_inicio')||null,data_entrega:val('tf_entrega')||null,checklist:window._ckl||[]};
+  const vinculo=_parseVinculoTarefa();
+  const payload={...vinculo,titulo,obs:val('tf_obs'),status:val('tf_status')||'a-fazer',data_inicio:val('tf_inicio')||null,data_entrega:val('tf_entrega')||null,checklist:window._ckl||[]};
   const {data:row,error}=await sb.from('tarefas').insert(payload).select().single();
   if(error){ toast('Erro ao salvar tarefa: '+error.message); return; }
   data.tarefas.unshift(mapTarefa(row));
@@ -1592,11 +1608,12 @@ async function saveTarefa(){
 
 async function updateTarefa(id){
   const titulo=val('tf_titulo'); if(!titulo){ toast('Informe o título'); return; }
-  const payload={cliente_id:val('tf_cli')||null,titulo,obs:val('tf_obs'),status:val('tf_status')||'a-fazer',data_inicio:val('tf_inicio')||null,data_entrega:val('tf_entrega')||null,checklist:window._ckl||[]};
+  const vinculo=_parseVinculoTarefa();
+  const payload={...vinculo,titulo,obs:val('tf_obs'),status:val('tf_status')||'a-fazer',data_inicio:val('tf_inicio')||null,data_entrega:val('tf_entrega')||null,checklist:window._ckl||[]};
   const {error}=await sb.from('tarefas').update(payload).eq('id',id);
   if(error){ toast('Erro ao atualizar tarefa'); return; }
   const t=data.tarefas.find(x=>x.id===id);
-  if(t) Object.assign(t,{clienteId:payload.cliente_id,titulo:payload.titulo,obs:payload.obs,status:payload.status,dataInicio:payload.data_inicio||'',dataEntrega:payload.data_entrega||'',checklist:payload.checklist});
+  if(t) Object.assign(t,{clienteId:payload.cliente_id,leadId:payload.lead_id,titulo:payload.titulo,obs:payload.obs,status:payload.status,dataInicio:payload.data_inicio||'',dataEntrega:payload.data_entrega||'',checklist:payload.checklist});
   closeModal(); render();
 }
 
