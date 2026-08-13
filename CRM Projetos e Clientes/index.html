@@ -1691,6 +1691,28 @@ function movAtivoNoMes(m, mesFiltro){
   if(fim && fim < mesFiltro) return false;
   return true;
 }
+function patrimonioTotal(contexto){
+  const hoje = new Date();
+  return (data.movExtra||[]).filter(m=>m.contexto===contexto && m.tipo==='investimento').reduce((s,m)=>{
+    if(m.periodo==='Mensal'){
+      // soma aportes: 1 valor por mês ativo, desde o início até hoje (ou até encerrar)
+      if(!m.data) return s;
+      const [iy,im] = m.data.slice(0,7).split('-').map(Number);
+      let count = (hoje.getFullYear()-iy)*12 + (hoje.getMonth()+1-im) + 1;
+      if(m.dataFim){
+        const [fy,fm] = m.dataFim.slice(0,7).split('-').map(Number);
+        count = Math.min(count, (fy-iy)*12 + (fm-im) + 1);
+      }
+      return s + (m.valor||0)*Math.max(count,0);
+    }
+    return s + (m.valor||0);
+  },0);
+}
+function movTipoInfo(tipo){
+  if(tipo==='investimento') return {label:'Investimento', cor:'var(--blue)', bg:'rgba(133,183,235,0.08)', brd:'rgba(133,183,235,0.2)'};
+  if(tipo==='receita') return {label:'Receita', cor:'var(--green)', bg:'rgba(93,202,165,0.08)', brd:'rgba(93,202,165,0.2)'};
+  return {label:'Despesa', cor:'var(--red)', bg:'rgba(226,75,74,0.08)', brd:'rgba(226,75,74,0.2)'};
+}
 
 function renderFinanceiro(){
   if(finView==='pessoal') return renderFinanceiroPessoal();
@@ -1956,6 +1978,18 @@ function renderFinanceiro(){
     h+=`<div class="empty-state" style="margin-bottom:32px"><div class="empty-icon">💸</div><div class="empty-text">Nenhuma despesa ativa neste período</div></div>`;
   }
 
+  // ── PATRIMÔNIO INVESTIDO (CDB, câmbio, etc — não é caixa, não conta no saldo) ──
+  const patrimonioEmp = patrimonioTotal('empresarial');
+  if(patrimonioEmp>0){
+    h+=`<div style="background:var(--bg2);border:1px solid rgba(133,183,235,0.25);border-radius:6px;padding:18px 22px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Patrimônio Investido</div>
+        <div style="font-size:12px;color:var(--text3)">Dinheiro alocado fora do caixa (CDB, câmbio, etc) — não entra no saldo</div>
+      </div>
+      <div style="font-size:26px;font-weight:900;letter-spacing:-1px;color:var(--blue)">${formatCurrency(patrimonioEmp)}</div>
+    </div>`;
+  }
+
   // ── MOVIMENTAÇÕES EXTRAS (receita/despesa avulsa, ex: empréstimo) ─────────
   h+=`<div style="display:flex;align-items:center;justify-content:space-between">${label('Movimentações Extras')}<button class="btn btn-ghost" style="font-size:12px;padding:5px 12px;margin-bottom:10px" onclick="openMovForm()">+ Nova Movimentação</button></div>`;
   if(movEmpMes.length){
@@ -1970,11 +2004,11 @@ function renderFinanceiro(){
           <th style="padding:13px 18px;border-bottom:1px solid var(--border)"></th>
         </tr></thead><tbody>`+
       movEmpMes.map(m=>{
-        const isReceita = m.tipo==='receita';
+        const ti = movTipoInfo(m.tipo);
         return `<tr style="border-bottom:1px solid var(--border)">
-        <td style="padding:15px 18px"><span style="font-size:13px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:${isReceita?'var(--green)':'var(--red)'};background:${isReceita?'rgba(93,202,165,0.08)':'rgba(226,75,74,0.08)'};border:1px solid ${isReceita?'rgba(93,202,165,0.2)':'rgba(226,75,74,0.2)'};padding:3px 10px;border-radius:2px">${isReceita?'Receita':'Despesa'}</span></td>
+        <td style="padding:15px 18px"><span style="font-size:13px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:${ti.cor};background:${ti.bg};border:1px solid ${ti.brd};padding:3px 10px;border-radius:2px">${ti.label}</span></td>
         <td style="padding:15px 18px;font-size:13px;font-weight:700;color:var(--text)">${m.item}</td>
-        <td style="padding:15px 18px;font-size:14px;font-weight:800;color:${isReceita?'var(--green)':'var(--red)'}">${formatCurrency(m.valor)}</td>
+        <td style="padding:15px 18px;font-size:14px;font-weight:800;color:${ti.cor}">${formatCurrency(m.valor)}</td>
         <td style="padding:15px 18px;font-size:12px;color:var(--text2)">${m.categoria||'—'}</td>
         <td style="padding:15px 18px;font-size:12px;color:var(--text2)">${m.periodo}</td>
         <td style="padding:15px 18px;text-align:right;white-space:nowrap;display:flex;gap:6px;justify-content:flex-end;align-items:center">
@@ -2067,6 +2101,18 @@ function renderFinanceiroPessoal(){
     </div>
   </div>`;
 
+  // ── PATRIMÔNIO INVESTIDO (CDB, câmbio, etc — não é caixa, não conta no saldo) ──
+  const patrimonioPes = patrimonioTotal('pessoal');
+  if(patrimonioPes>0){
+    h+=`<div style="background:var(--bg2);border:1px solid rgba(133,183,235,0.25);border-radius:6px;padding:18px 22px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-size:13px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--text3);margin-bottom:4px">Patrimônio Investido</div>
+        <div style="font-size:12px;color:var(--text3)">Dinheiro alocado fora do caixa (CDB, câmbio, etc) — não entra no saldo</div>
+      </div>
+      <div style="font-size:26px;font-weight:900;letter-spacing:-1px;color:var(--blue)">${formatCurrency(patrimonioPes)}</div>
+    </div>`;
+  }
+
   // ── LANÇAMENTOS ──────────────────────────────────────────────────────────
   h += label('Lançamentos — '+MESES[finMonth-1]+' '+finYear);
   if(movsMes.length){
@@ -2081,11 +2127,11 @@ function renderFinanceiroPessoal(){
           <th style="padding:13px 18px;border-bottom:1px solid var(--border)"></th>
         </tr></thead><tbody>`+
       movsMes.map(m=>{
-        const isReceita = m.tipo==='receita';
+        const ti = movTipoInfo(m.tipo);
         return `<tr style="border-bottom:1px solid var(--border)">
-        <td style="padding:15px 18px"><span style="font-size:13px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:${isReceita?'var(--green)':'var(--red)'};background:${isReceita?'rgba(93,202,165,0.08)':'rgba(226,75,74,0.08)'};border:1px solid ${isReceita?'rgba(93,202,165,0.2)':'rgba(226,75,74,0.2)'};padding:3px 10px;border-radius:2px">${isReceita?'Receita':'Despesa'}</span></td>
+        <td style="padding:15px 18px"><span style="font-size:13px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:${ti.cor};background:${ti.bg};border:1px solid ${ti.brd};padding:3px 10px;border-radius:2px">${ti.label}</span></td>
         <td style="padding:15px 18px;font-size:13px;font-weight:700;color:var(--text)">${m.item}</td>
-        <td style="padding:15px 18px;font-size:14px;font-weight:800;color:${isReceita?'var(--green)':'var(--red)'}">${formatCurrency(m.valor)}</td>
+        <td style="padding:15px 18px;font-size:14px;font-weight:800;color:${ti.cor}">${formatCurrency(m.valor)}</td>
         <td style="padding:15px 18px;font-size:12px;color:var(--text2)">${m.categoria||'—'}</td>
         <td style="padding:15px 18px;font-size:12px;color:var(--text2)">${m.periodo}</td>
         <td style="padding:15px 18px;text-align:right;white-space:nowrap;display:flex;gap:6px;justify-content:flex-end;align-items:center">
@@ -2113,6 +2159,7 @@ function openMovForm(){
       <select class="form-input" id="mov-tipo">
         <option value="receita">Receita</option>
         <option value="despesa">Despesa</option>
+        <option value="investimento">Investimento (não conta no saldo)</option>
       </select>
     </div>
     <div class="form-row"><label class="form-label">Descrição</label><input class="form-input" id="mov-item" placeholder="Ex: Empréstimo pessoal"></div>
@@ -2141,6 +2188,7 @@ function openEditMov(id){
       <select class="form-input" id="em_tipo">
         <option value="receita" ${m.tipo==='receita'?'selected':''}>Receita</option>
         <option value="despesa" ${m.tipo==='despesa'?'selected':''}>Despesa</option>
+        <option value="investimento" ${m.tipo==='investimento'?'selected':''}>Investimento (não conta no saldo)</option>
       </select>
     </div>
     <div class="form-row"><label class="form-label">Descrição</label>
