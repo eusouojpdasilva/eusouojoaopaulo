@@ -525,6 +525,9 @@ const TASK_COR   = {'a-fazer':'var(--text3)','andamento':'var(--blue)','revisao'
 let tab = 'pipeline';
 let projFilter = 'all';
 let finView = 'empresarial'; // 'empresarial' | 'pessoal'
+let agendaView = 'hoje'; // 'hoje' | 'semana' | 'mes'
+let agendaStatus = 'idle'; // 'idle' | 'loading' | 'ready' | 'error'
+const AGENDA_URL = 'https://white-forest-de73.eusouojpdasilva.workers.dev/calendar';
 
 // ─── META LOCAL (sem tabela no Supabase) ─────────────────────────────────────
 const META_KEY = 'jp_crm_meta';
@@ -533,7 +536,7 @@ function persistMeta(){ localStorage.setItem(META_KEY, JSON.stringify({metaMensa
 
 // ─── CACHE LOCAL (runtime) ────────────────────────────────────────────────────
 const _meta = loadMeta();
-let data = { leads:[], clientes:[], contratos:[], faturas:[], despesas:[], tarefas:[], movExtra:[], metaMensal:_meta.metaMensal, currency:_meta.currency };
+let data = { leads:[], clientes:[], contratos:[], faturas:[], despesas:[], tarefas:[], movExtra:[], agenda:[], metaMensal:_meta.metaMensal, currency:_meta.currency };
 
 // ─── FIELD MAPPING (DB snake_case → JS camelCase) ─────────────────────────────
 const mapLead    = r => ({id:r.id, nome:r.nome, nicho:r.nicho, proj:r.proj, status:r.status, valorEstimado:r.valor_estimado?String(r.valor_estimado):'', moeda:r.moeda||'BRL', tipo:r.tipo, followup:r.followup, obs:r.obs, contatoData:r.contato_data, clienteId:r.cliente_id, createdAt:r.created_at});
@@ -700,7 +703,23 @@ function switchTab(t){
   const btn=document.getElementById('main-btn');
   btn.textContent=btns[t]||'';
   btn.style.visibility=t==='dashboard'?'hidden':'visible';
+  if(t==='dashboard' && agendaStatus==='idle') loadAgenda();
   render();
+}
+function setAgendaView(v){ agendaView=v; render(); }
+async function loadAgenda(){
+  agendaStatus='loading';
+  if(tab==='dashboard') render();
+  try{
+    const r = await fetch(AGENDA_URL);
+    const j = await r.json();
+    if(!j.ok) throw new Error(j.error||'Erro desconhecido');
+    data.agenda = j.events||[];
+    agendaStatus='ready';
+  }catch(e){
+    agendaStatus='error';
+  }
+  if(tab==='dashboard') render();
 }
 function handleMainBtn(){
   if(tab==='pipeline') openLeadForm(null);
@@ -778,6 +797,23 @@ function renderDashboard(){
 
   const secLabel = txt=>`<div style="font-size:13px;font-weight:700;letter-spacing:4px;text-transform:uppercase;color:var(--text2);padding-bottom:14px;border-bottom:1px solid var(--border);margin-bottom:20px;display:flex;align-items:center;gap:12px"><span style="width:20px;height:1px;background:var(--terra);display:inline-block;flex-shrink:0;opacity:.8"></span>${txt}</div>`;
 
+  // ── AGENDA (Google Calendar) ──
+  const semanaEnd = new Date(Date.now()+7*86400000).toISOString().slice(0,10);
+  const mesEnd = new Date(Date.now()+30*86400000).toISOString().slice(0,10);
+  const evRange = (e)=>{
+    const s = e.start.slice(0,10);
+    let enD = new Date(e.end);
+    if(e.allDay) enD = new Date(enD.getTime()-86400000);
+    return [s, enD.toISOString().slice(0,10)];
+  };
+  const agendaWindows = {
+    hoje:   data.agenda.filter(e=>{const[s,en]=evRange(e); return s<=hoje && en>=hoje;}),
+    semana: data.agenda.filter(e=>{const[s,en]=evRange(e); return s<=semanaEnd && en>=hoje;}),
+    mes:    data.agenda.filter(e=>{const[s,en]=evRange(e); return s<=mesEnd && en>=hoje;}),
+  };
+  const agendaAtual = agendaWindows[agendaView] || agendaWindows.hoje;
+  const agendaPill = (v,label)=>`<button class="pill" style="font-size:12px;padding:5px 14px;${agendaView===v?'border-color:var(--terra);color:var(--terra);background:var(--terra7)':''}" onclick="setAgendaView('${v}')">${label} (${agendaWindows[v].length})</button>`;
+
   let h = '';
 
   // ── 1. KPIs ──
@@ -786,6 +822,36 @@ function renderDashboard(){
     <div class="stat"><span class="stat-label">Em Proposta</span><div class="stat-value accent">${emProposta.length}</div></div>
     <div class="stat"><span class="stat-label">Clientes Ativos</span><div class="stat-value">${clientesAtivos.length}</div></div>
     <div class="stat"><span class="stat-label">Receita do Mês</span><div class="stat-value accent">${formatCurrency(recebidoMes)}</div></div>
+  </div>`;
+
+  // ── AGENDA ──
+  h+=`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:24px;margin-bottom:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+      ${secLabel('Agenda')}
+      <div style="display:flex;gap:6px">
+        ${agendaPill('hoje','Hoje')}
+        ${agendaPill('semana','7 dias')}
+        ${agendaPill('mes','30 dias')}
+      </div>
+    </div>
+    ${agendaStatus==='loading'?`<div style="text-align:center;padding:28px 0;color:var(--text3);font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase">Carregando agenda...</div>`:''}
+    ${agendaStatus==='error'?`<div style="text-align:center;padding:28px 0;color:var(--red)"><div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">Não foi possível carregar a agenda</div><button class="btn btn-ghost" style="font-size:12px;padding:5px 14px" onclick="loadAgenda()">Tentar de novo</button></div>`:''}
+    ${agendaStatus==='ready'&&agendaAtual.length===0?`<div style="text-align:center;padding:28px 0;color:var(--text4)"><div style="font-size:22px;margin-bottom:8px;opacity:.4">✓</div><div style="font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase">Nada agendado</div></div>`:''}
+    ${agendaStatus==='ready'&&agendaAtual.length>0?`<div style="display:flex;flex-direction:column;gap:6px;max-height:280px;overflow-y:auto">
+      ${agendaAtual.map(e=>{
+        const d = new Date(e.start);
+        const dataLabel = e.allDay
+          ? d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' · dia inteiro'
+          : d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' · '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+        return `<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 12px;background:var(--bg3);border-radius:3px;border-left:2px solid var(--blue)">
+          <div style="min-width:0">
+            <div style="font-size:12px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e.title}</div>
+            <div style="font-size:13px;color:var(--text3)">${dataLabel}</div>
+          </div>
+          ${e.meetLink?`<a href="${e.meetLink}" target="_blank" rel="noopener" style="font-size:12px;color:var(--blue);text-decoration:none;flex-shrink:0">Meet →</a>`:''}
+        </div>`;
+      }).join('')}
+    </div>`:''}
   </div>`;
 
   // ── 2+3. Funil + Gráfico por dia ──
