@@ -1999,6 +1999,7 @@ function renderFinanceiro(){
       <table style="width:100%;border-collapse:collapse">
         <thead><tr style="background:var(--bg3)">
           <th style="padding:13px 18px;text-align:left;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Tipo</th>
+          <th style="padding:13px 18px;text-align:left;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Data</th>
           <th style="padding:13px 18px;text-align:left;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Descrição</th>
           <th style="padding:13px 18px;text-align:left;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Valor</th>
           <th style="padding:13px 18px;text-align:left;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Categoria</th>
@@ -2009,6 +2010,7 @@ function renderFinanceiro(){
         const ti = movTipoInfo(m.tipo);
         return `<tr style="border-bottom:1px solid var(--border)">
         <td style="padding:15px 18px"><span style="font-size:13px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:${ti.cor};background:${ti.bg};border:1px solid ${ti.brd};padding:3px 10px;border-radius:2px">${ti.label}</span></td>
+        <td style="padding:15px 18px;font-size:12px;color:var(--text2);white-space:nowrap">${m.data?new Date(m.data+'T00:00:00').toLocaleDateString('pt-BR'):'—'}</td>
         <td style="padding:15px 18px;font-size:13px;font-weight:700;color:var(--text)">${m.item}</td>
         <td style="padding:15px 18px;font-size:14px;font-weight:800;color:${ti.cor}">${formatCurrency(m.valor)}</td>
         <td style="padding:15px 18px;font-size:12px;color:var(--text2)">${m.categoria||'—'}</td>
@@ -2124,6 +2126,7 @@ function renderFinanceiroPessoal(){
       <table style="width:100%;border-collapse:collapse">
         <thead><tr style="background:var(--bg3)">
           <th style="padding:13px 18px;text-align:left;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Tipo</th>
+          <th style="padding:13px 18px;text-align:left;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Data</th>
           <th style="padding:13px 18px;text-align:left;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Descrição</th>
           <th style="padding:13px 18px;text-align:left;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Valor</th>
           <th style="padding:13px 18px;text-align:left;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text2);border-bottom:1px solid var(--border)">Categoria</th>
@@ -2134,6 +2137,7 @@ function renderFinanceiroPessoal(){
         const ti = movTipoInfo(m.tipo);
         return `<tr style="border-bottom:1px solid var(--border)">
         <td style="padding:15px 18px"><span style="font-size:13px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:${ti.cor};background:${ti.bg};border:1px solid ${ti.brd};padding:3px 10px;border-radius:2px">${ti.label}</span></td>
+        <td style="padding:15px 18px;font-size:12px;color:var(--text2);white-space:nowrap">${m.data?new Date(m.data+'T00:00:00').toLocaleDateString('pt-BR'):'—'}</td>
         <td style="padding:15px 18px;font-size:13px;font-weight:700;color:var(--text)">${m.item}</td>
         <td style="padding:15px 18px;font-size:14px;font-weight:800;color:${ti.cor}">${formatCurrency(m.valor)}</td>
         <td style="padding:15px 18px;font-size:12px;color:var(--text2)">${m.categoria||'—'}</td>
