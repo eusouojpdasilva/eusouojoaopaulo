@@ -449,7 +449,7 @@ textarea.form-input{resize:vertical;min-height:80px}
       <option value="EUR">EUR</option>
     </select>
     <label class="filter-label">Meta Mensal</label>
-    <input id="meta-input" class="form-input" style="width:140px;padding:6px 8px;border-radius:6px;font-size:12px" placeholder="0" onblur="saveMeta()" onkeydown="if(event.key==='Enter'){saveMeta();this.blur()}" />
+    <input id="meta-input" class="form-input" style="width:140px;padding:6px 8px;border-radius:6px;font-size:12px" placeholder="0,00" oninput="maskMoeda(this)" onblur="saveMeta()" onkeydown="if(event.key==='Enter'){saveMeta();this.blur()}" />
     <button class="btn" style="padding:6px 12px;font-size:12px" onclick="saveMeta()">OK</button>
   </div>
 </div>
@@ -657,8 +657,40 @@ function isCobravel(ct, mes){
   return true; // fallback
 }
 function setCurrency(c){ data.currency=c; persistMeta(); render(); }
-function saveMeta(){ const el=document.getElementById('meta-input'); if(!el) return; data.metaMensal=parseFloat(el.value.replace(',','.'))||0; persistMeta(); render(); }
+function saveMeta(){ const el=document.getElementById('meta-input'); if(!el) return; data.metaMensal=parseMoeda(el.value); persistMeta(); render(); }
 function formatCurrency(v){ if(!v&&v!==0) return '—'; return new Intl.NumberFormat(data.currency==='BRL'?'pt-BR':'en-US',{style:'currency',currency:data.currency||'BRL'}).format(v); }
+
+// ─── VALORES MONETÁRIOS (padrão brasileiro: XXX.XXX,XX) ───────────────────────
+// Converte texto digitado (em qualquer formato razoável) para número — trata ponto
+// como separador de milhar e vírgula como decimal, evitando o bug de parseFloat
+// quebrar em "6.079,99" (que virava 6.079 com replace(',','.') sozinho).
+function parseMoeda(v){
+  if(v===null||v===undefined) return 0;
+  let s = String(v).replace(/[^\d,]/g,'');
+  if(!s) return 0;
+  const partes = s.split(',');
+  if(partes.length>1){
+    const centavos = partes.pop();
+    s = partes.join('') + '.' + centavos;
+  }
+  return parseFloat(s) || 0;
+}
+// Formata número pro texto de exibição no input (sem símbolo de moeda): "6.079,99"
+function formatMoedaInput(v){
+  if(v===null||v===undefined||v==='') return '';
+  const n = typeof v==='number' ? v : parseMoeda(v);
+  return n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+// Máscara ao digitar: usuário digita só números, os 2 últimos viram centavos automaticamente
+function maskMoeda(el){
+  let digits = el.value.replace(/\D/g,'');
+  if(!digits){ el.value=''; return; }
+  digits = digits.replace(/^0+(?=\d)/,'');
+  while(digits.length<3) digits = '0'+digits;
+  const centavos = digits.slice(-2);
+  const inteiro = digits.slice(0,-2).replace(/\B(?=(\d{3})+(?!\d))/g,'.');
+  el.value = inteiro + ',' + centavos;
+}
 
 // ─── ROTEAMENTO ───────────────────────────────────────────────────────────────
 function switchTab(t){
@@ -877,7 +909,7 @@ window._chkRec = function(){
   window._calcParc();
 };
 window._calcParc = function(){
-  const total = parseFloat((document.getElementById('ct_total')?.value||'').replace(',','.')) || 0;
+  const total = parseMoeda(document.getElementById('ct_total')?.value);
   const n     = parseInt(document.getElementById('ct_num_parcelas')?.value) || 0;
   const info  = document.getElementById('ct_parc_info');
   const inicio = document.getElementById('ct_inicio')?.value;
@@ -885,7 +917,7 @@ window._calcParc = function(){
     const parc = total/n;
     if(info) info.innerHTML = `<strong>${n}x de ${formatCurrency(parc)}</strong> = ${formatCurrency(total)} no total`;
     const valorEl = document.getElementById('ct_valor');
-    if(valorEl) valorEl.value = parc.toFixed(2);
+    if(valorEl) valorEl.value = formatMoedaInput(parc);
     if(inicio){
       const d = new Date(inicio+'T00:00:00');
       d.setMonth(d.getMonth()+n-1);
@@ -901,7 +933,7 @@ function _parceladoSection(numParcelas, valor){
     <div style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:12px">Configuração de Parcelas</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
       <div><label class="form-label">Valor total do serviço</label>
-        <input class="form-input" id="ct_total" placeholder="0.00" oninput="window._calcParc()" value="${numParcelas&&valor?(numParcelas*valor).toFixed(2):''}">
+        <input class="form-input" id="ct_total" placeholder="0,00" oninput="maskMoeda(this);window._calcParc()" value="${numParcelas&&valor?formatMoedaInput(numParcelas*valor):''}">
       </div>
       <div><label class="form-label">Nº de parcelas</label>
         <input class="form-input" id="ct_num_parcelas" type="number" min="2" max="60" placeholder="Ex: 3" oninput="window._calcParc()" value="${numParcelas||''}">
@@ -924,7 +956,7 @@ function renderPipeline(){
   const pipelineMap = {};
   leads.forEach(l=>{
     if(l.status==='perdido') return;
-    const n=parseFloat((l.valorEstimado||'').replace(/[^\d.,]/g,'').replace(',','.'));
+    const n=parseMoeda(l.valorEstimado);
     if(isNaN(n)||n<=0) return;
     const m=l.moeda||'BRL';
     pipelineMap[m]=(pipelineMap[m]||0)+n;
@@ -963,7 +995,7 @@ function renderPipeline(){
         <div class="card-name">${l.nome}</div>
         <div class="card-nicho">${l.nicho||'&nbsp;'}</div>
         <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
-          <div class="card-value">${l.valorEstimado?`<span style="font-size:11px;opacity:.6;margin-right:2px">${l.moeda||'BRL'}</span>${l.valorEstimado}`:'—'}</div>
+          <div class="card-value">${l.valorEstimado?`<span style="font-size:11px;opacity:.6;margin-right:2px">${l.moeda||'BRL'}</span>${formatMoedaInput(l.valorEstimado)}`:'—'}</div>
           ${l.followup&&st!=='fechado'?`<div class="card-followup">↻ ${new Date(l.followup+'T00:00:00').toLocaleDateString('pt-BR')}</div>`:''}
         </div>
         <div class="card-footer">
@@ -1008,7 +1040,7 @@ function openLeadForm(id){
           <option value="USD" ${l&&l.moeda==='USD'?'selected':''}>USD</option>
           <option value="EUR" ${l&&l.moeda==='EUR'?'selected':''}>EUR</option>
         </select>
-        <input class="form-input" id="fv" value="${l?l.valorEstimado||'':''}" placeholder="Ex: 3500">
+        <input class="form-input" id="fv" oninput="maskMoeda(this)" value="${l?formatMoedaInput(l.valorEstimado):''}" placeholder="Ex: 3.500,00">
       </div>
     </div>
     <div class="form-row"><label class="form-label">Observações</label><textarea class="form-input" id="fo">${l?l.obs||'':''}</textarea></div>
@@ -1022,14 +1054,14 @@ function openLeadForm(id){
 }
 
 async function saveLead(){
-  const payload={nome:val('fn')||'Sem nome',nicho:val('fni'),proj:val('fp'),status:val('fs'),valor_estimado:parseFloat(val('fv').replace(/[^\d.,]/g,'').replace(',','.'))||null,moeda:val('fmoeda')||'BRL',tipo:val('ftipo'),followup:val('ffup')||null,obs:val('fo'),contato_data:new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}),cliente_id:null};
+  const payload={nome:val('fn')||'Sem nome',nicho:val('fni'),proj:val('fp'),status:val('fs'),valor_estimado:parseMoeda(val('fv'))||null,moeda:val('fmoeda')||'BRL',tipo:val('ftipo'),followup:val('ffup')||null,obs:val('fo'),contato_data:new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}),cliente_id:null};
   const {data:row,error}=await sb.from('leads').insert(payload).select().single();
   if(error){ toast('Erro ao salvar lead: '+error.message); return; }
   data.leads.unshift(mapLead(row));
   closeModal(); render(); toast('Lead adicionado!','success');
 }
 async function updateLead(id){
-  const payload={nome:val('fn'),nicho:val('fni'),proj:val('fp'),status:val('fs'),valor_estimado:parseFloat(val('fv').replace(/[^\d.,]/g,'').replace(',','.'))||null,moeda:val('fmoeda')||'BRL',tipo:val('ftipo'),followup:val('ffup')||null,obs:val('fo')};
+  const payload={nome:val('fn'),nicho:val('fni'),proj:val('fp'),status:val('fs'),valor_estimado:parseMoeda(val('fv'))||null,moeda:val('fmoeda')||'BRL',tipo:val('ftipo'),followup:val('ffup')||null,obs:val('fo')};
   const {error}=await sb.from('leads').update(payload).eq('id',id);
   if(error){ toast('Erro ao atualizar lead'); return; }
   const l=data.leads.find(x=>x.id===id);
@@ -1069,7 +1101,7 @@ function openConvertLeadForm(leadId){
     <div class="form-row"><label class="form-label">Origem</label><select class="form-input" id="c_conheceu">${ORIGENS.map(o=>`<option>${o}</option>`).join('')}</select></div>
     <div class="form-row"><label class="form-label">Observação</label><textarea class="form-input" id="c_obs">${l.obs||''}</textarea></div>
     <div style="font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:16px;margin-top:8px">Contrato</div>
-    <div class="form-row"><label class="form-label">Valor da parcela / mensal</label><input class="form-input" id="ct_valor" value="${l.valorEstimado?l.valorEstimado.replace(/[^\d.,]/g,''):''}" placeholder="0.00"></div>
+    <div class="form-row"><label class="form-label">Valor da parcela / mensal</label><input class="form-input" id="ct_valor" oninput="maskMoeda(this)" value="${l.valorEstimado?formatMoedaInput(l.valorEstimado):''}" placeholder="0,00"></div>
     <div class="form-row"><label class="form-label">Recorrência</label>${_recSelect('')}</div>
     ${_parceladoSection(null,null)}
     <div class="form-row"><label class="form-label">Data de início</label><input class="form-input" type="date" id="ct_inicio" value="${hoje}"></div>
@@ -1087,7 +1119,7 @@ async function convertLead(leadId){
   const l=data.leads.find(x=>x.id===leadId); if(!l) return;
   const nome=val('c_nome')||l.nome;
   const av=nome.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
-  const valor=parseFloat((val('ct_valor')||'0').replace(',','.'))||0;
+  const valor=parseMoeda(val('ct_valor'))||0;
 
   const {data:cRow,error:cErr}=await sb.from('clientes').insert({nome,empresa:val('c_empresa'),instagram:val('c_instagram'),proj:l.proj,status:'Ativo',como_conheceu:val('c_conheceu'),observacao:val('c_obs'),lead_id:leadId,av,cidade:val('c_cidade')||null,estado:val('c_estado')||null,pais:val('c_pais')||'Brasil'}).select().single();
   if(cErr){ toast('Erro ao criar cliente: '+cErr.message); return; }
@@ -1223,7 +1255,7 @@ function openClienteForm(){
     <div class="form-row"><label class="form-label">Origem</label><select class="form-input" id="c_conheceu">${ORIGENS.map(o=>`<option>${o}</option>`).join('')}</select></div>
     <div class="form-row"><label class="form-label">Observação</label><textarea class="form-input" id="c_obs"></textarea></div>
     <div style="font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:16px;margin-top:8px">Contrato</div>
-    <div class="form-row"><label class="form-label">Valor da parcela / mensal</label><input class="form-input" id="ct_valor" placeholder="0.00"></div>
+    <div class="form-row"><label class="form-label">Valor da parcela / mensal</label><input class="form-input" id="ct_valor" oninput="maskMoeda(this)" placeholder="0,00"></div>
     <div class="form-row"><label class="form-label">Recorrência</label>${_recSelect('')}</div>
     ${_parceladoSection(null,null)}
     <div class="form-row"><label class="form-label">Data de início</label><input class="form-input" type="date" id="ct_inicio" value="${hoje}" oninput="window._calcParc()"></div>
@@ -1239,7 +1271,7 @@ function openClienteForm(){
 async function saveCliente(){
   const nome=val('c_nome')||'Sem nome';
   const av=nome.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
-  const valor=parseFloat((val('ct_valor')||'0').replace(',','.'))||0;
+  const valor=parseMoeda(val('ct_valor'))||0;
 
   const {data:cRow,error:cErr}=await sb.from('clientes').insert({nome,empresa:val('c_empresa'),instagram:val('c_instagram'),proj:val('c_proj')||'jp',status:'Ativo',como_conheceu:val('c_conheceu'),observacao:val('c_obs'),lead_id:null,av,cidade:val('c_cidade')||null,estado:val('c_estado')||null,pais:val('c_pais')||'Brasil'}).select().single();
   if(cErr){ toast('Erro ao salvar cliente: '+cErr.message); return; }
@@ -1274,7 +1306,7 @@ function openClienteEdit(id){
     <div class="form-row"><label class="form-label">Origem</label><select class="form-input" id="c_conheceu">${ORIGENS.map(o=>`<option ${(c.comoConheceu||'').toLowerCase()===o.toLowerCase()?'selected':''}>${o}</option>`).join('')}</select></div>
     <div class="form-row"><label class="form-label">Observação</label><textarea class="form-input" id="c_obs">${c.observacao||''}</textarea></div>
     <div style="font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text3);padding-bottom:10px;border-bottom:1px solid var(--border);margin-bottom:16px;margin-top:8px">Contrato Ativo</div>
-    <div class="form-row"><label class="form-label">Valor da parcela / mensal</label><input class="form-input" id="ct_valor" value="${ct?ct.valor:''}" placeholder="0.00"></div>
+    <div class="form-row"><label class="form-label">Valor da parcela / mensal</label><input class="form-input" id="ct_valor" oninput="maskMoeda(this)" value="${ct?formatMoedaInput(ct.valor):''}" placeholder="0,00"></div>
     <div class="form-row"><label class="form-label">Recorrência</label>${_recSelect(ct?ct.recorrencia:'')}</div>
     ${_parceladoSection(ct?ct.numParcelas:null, ct?ct.valor:null)}
     <div class="form-row"><label class="form-label">Data de início</label><input class="form-input" type="date" id="ct_inicio" value="${ct?ct.dataInicio:''}" oninput="window._calcParc()"></div>
@@ -1304,7 +1336,7 @@ async function updateCliente(id){
   if(cErr){ toast('Erro ao atualizar cliente'); return; }
   Object.assign(c,{nome:cPayload.nome,empresa:cPayload.empresa,instagram:cPayload.instagram,status:statusFinal,proj:cPayload.proj,comoConheceu:cPayload.como_conheceu,observacao:cPayload.observacao,av:cPayload.av,cidade:cPayload.cidade,estado:cPayload.estado,pais:cPayload.pais});
 
-  const valor=parseFloat((val('ct_valor')||'0').replace(',','.'))||0;
+  const valor=parseMoeda(val('ct_valor'))||0;
   let ct=getContratoAtivo(id);
   if(ct){
     const diaVenc=parseInt(val('ct_dia_venc'))||null;
@@ -1341,7 +1373,7 @@ function openAddContratoForm(clienteId){
   modal(`<div class="modal" onclick="event.stopPropagation()">
     <div class="modal-divider"></div>
     <div class="modal-title">Novo Contrato</div>
-    <div class="form-row"><label class="form-label">Valor da parcela / mensal</label><input class="form-input" id="ct_valor" placeholder="0.00"></div>
+    <div class="form-row"><label class="form-label">Valor da parcela / mensal</label><input class="form-input" id="ct_valor" oninput="maskMoeda(this)" placeholder="0,00"></div>
     <div class="form-row"><label class="form-label">Recorrência</label>${_recSelect('')}</div>
     ${_parceladoSection(null,null)}
     <div class="form-row"><label class="form-label">Data de início</label><input class="form-input" type="date" id="ct_inicio" value="${hoje}" oninput="window._calcParc()"></div>
@@ -1351,7 +1383,7 @@ function openAddContratoForm(clienteId){
   </div>`);
 }
 async function saveContrato(clienteId){
-  const valor=parseFloat((val('ct_valor')||'0').replace(',','.'))||0;
+  const valor=parseMoeda(val('ct_valor'))||0;
   if(!valor){ toast('Informe o valor'); return; }
   const {data:ctRow,error}=await sb.from('contratos').insert({cliente_id:clienteId,valor,recorrencia:val('ct_recorrencia')||'Mensal',data_inicio:val('ct_inicio'),vencimento:val('ct_vencimento')||null,status:'Ativo',moeda:data.currency||'BRL',dia_vencimento:parseInt(val('ct_dia_venc'))||null}).select().single();
   if(error){ toast('Erro ao salvar contrato'); return; }
@@ -2084,7 +2116,7 @@ function openMovForm(){
       </select>
     </div>
     <div class="form-row"><label class="form-label">Descrição</label><input class="form-input" id="mov-item" placeholder="Ex: Empréstimo pessoal"></div>
-    <div class="form-row"><label class="form-label">Valor</label><input class="form-input" id="mov-valor" placeholder="0.00"></div>
+    <div class="form-row"><label class="form-label">Valor</label><input class="form-input" id="mov-valor" oninput="maskMoeda(this)" placeholder="0,00"></div>
     <div class="form-row"><label class="form-label">Categoria</label><input class="form-input" id="mov-cat" placeholder="Ex: Empréstimo, Salário, Aluguel..."></div>
     <div class="form-row"><label class="form-label">Período</label><select class="form-input" id="mov-periodo"><option>Único</option><option>Mensal</option></select></div>
     <div class="form-row"><label class="form-label">Data</label><input class="form-input" type="date" id="mov-data"></div>
@@ -2093,7 +2125,7 @@ function openMovForm(){
 }
 
 async function saveMov(){
-  const payload={contexto:finView,tipo:val('mov-tipo')||'despesa',item:val('mov-item')||'Movimentação',valor:parseFloat((val('mov-valor')||'0').replace(',','.'))||0,categoria:val('mov-cat')||'',periodo:val('mov-periodo')||'Único',data:val('mov-data')||new Date().toISOString().slice(0,10)};
+  const payload={contexto:finView,tipo:val('mov-tipo')||'despesa',item:val('mov-item')||'Movimentação',valor:parseMoeda(val('mov-valor'))||0,categoria:val('mov-cat')||'',periodo:val('mov-periodo')||'Único',data:val('mov-data')||new Date().toISOString().slice(0,10)};
   const {data:row,error}=await sb.from('financeiro_extra').insert(payload).select().single();
   if(error){ toast('Erro ao salvar movimentação: '+error.message); return; }
   data.movExtra.unshift(mapMovExtra(row));
@@ -2115,7 +2147,7 @@ function openEditMov(id){
       <input class="form-input" id="em_item" value="${m.item||''}">
     </div>
     <div class="form-row"><label class="form-label">Valor</label>
-      <input class="form-input" id="em_valor" value="${m.valor||''}">
+      <input class="form-input" id="em_valor" oninput="maskMoeda(this)" value="${formatMoedaInput(m.valor)}">
     </div>
     <div class="form-row"><label class="form-label">Categoria</label>
       <input class="form-input" id="em_cat" value="${m.categoria||''}">
@@ -2138,7 +2170,7 @@ function openEditMov(id){
 
 async function saveEditMov(id){
   const m=data.movExtra.find(x=>x.id===id); if(!m) return;
-  const payload={tipo:val('em_tipo')||m.tipo,item:val('em_item')||m.item,valor:parseFloat((val('em_valor')||'0').replace(',','.'))||m.valor,categoria:val('em_cat')||'',periodo:val('em_periodo')||m.periodo,data:val('em_data')||m.data};
+  const payload={tipo:val('em_tipo')||m.tipo,item:val('em_item')||m.item,valor:parseMoeda(val('em_valor'))||m.valor,categoria:val('em_cat')||'',periodo:val('em_periodo')||m.periodo,data:val('em_data')||m.data};
   const {error}=await sb.from('financeiro_extra').update(payload).eq('id',id);
   if(error){ toast('Erro ao atualizar movimentação'); return; }
   Object.assign(m,{tipo:payload.tipo,item:payload.item,valor:payload.valor,categoria:payload.categoria,periodo:payload.periodo,data:payload.data});
@@ -2169,7 +2201,7 @@ function openExpenseForm(){
     <div class="modal-divider"></div>
     <div class="modal-title">Nova Despesa</div>
     <div class="form-row"><label class="form-label">Item</label><input class="form-input" id="exp-item"></div>
-    <div class="form-row"><label class="form-label">Valor</label><input class="form-input" id="exp-valor" placeholder="0.00"></div>
+    <div class="form-row"><label class="form-label">Valor</label><input class="form-input" id="exp-valor" oninput="maskMoeda(this)" placeholder="0,00"></div>
     <div class="form-row"><label class="form-label">Período</label><select class="form-input" id="exp-periodo"><option>Mensal</option><option>Único</option></select></div>
     <div class="form-row"><label class="form-label">Categoria</label><input class="form-input" id="exp-cat"></div>
     <div class="form-row"><label class="form-label">Data</label><input class="form-input" type="date" id="exp-data"></div>
@@ -2179,7 +2211,7 @@ function openExpenseForm(){
 
 
 async function saveExpense(){
-  const payload={item:val('exp-item')||'Despesa',valor:parseFloat((val('exp-valor')||'0').replace(',','.'))||0,periodo:val('exp-periodo')||'Mensal',categoria:val('exp-cat')||'',data:val('exp-data')||new Date().toISOString().slice(0,10)};
+  const payload={item:val('exp-item')||'Despesa',valor:parseMoeda(val('exp-valor'))||0,periodo:val('exp-periodo')||'Mensal',categoria:val('exp-cat')||'',data:val('exp-data')||new Date().toISOString().slice(0,10)};
   const {data:row,error}=await sb.from('despesas').insert(payload).select().single();
   if(error){ toast('Erro ao salvar despesa'); return; }
   data.despesas.unshift(mapDespesa(row));
@@ -2195,7 +2227,7 @@ function openEditFatura(clienteId){
     <div class="modal-title">Editar Cobrança</div>
     <div style="font-size:12px;color:var(--text3);margin-bottom:20px">${c?c.nome:''} · ${MESES[finMonth-1]} ${finYear}</div>
     <div class="form-row"><label class="form-label">Valor cobrado</label>
-      <input class="form-input" id="ef_valor" value="${fat?fat.valor:ct.valor}" placeholder="0.00">
+      <input class="form-input" id="ef_valor" oninput="maskMoeda(this)" value="${formatMoedaInput(fat?fat.valor:ct.valor)}" placeholder="0,00">
     </div>
     <div class="form-row"><label class="form-label">Status</label>
       <select class="form-input" id="ef_status">
@@ -2218,7 +2250,7 @@ async function saveEditFatura(clienteId){
   const ct=getContratoAtivo(clienteId); if(!ct) return;
   const mes=finMesStr();
   const existing=getFatura(clienteId,mes);
-  const valor=parseFloat((val('ef_valor')||'0').replace(',','.'))||ct.valor;
+  const valor=parseMoeda(val('ef_valor'))||ct.valor;
   const status=val('ef_status')||'pendente';
   const dataPagamento=val('ef_datapag')||null;
   const payload={cliente_id:clienteId,contrato_id:ct.id,mes,valor,status,data_pagamento:dataPagamento};
@@ -2238,7 +2270,7 @@ function openEditDespesa(id){
       <input class="form-input" id="ed_item" value="${dep.item||''}">
     </div>
     <div class="form-row"><label class="form-label">Valor</label>
-      <input class="form-input" id="ed_valor" value="${dep.valor||''}">
+      <input class="form-input" id="ed_valor" oninput="maskMoeda(this)" value="${formatMoedaInput(dep.valor)}">
     </div>
     <div class="form-row"><label class="form-label">Período</label>
       <select class="form-input" id="ed_periodo">
@@ -2261,7 +2293,7 @@ function openEditDespesa(id){
 
 async function saveEditDespesa(id){
   const dep=data.despesas.find(x=>x.id===id); if(!dep) return;
-  const payload={item:val('ed_item')||dep.item,valor:parseFloat((val('ed_valor')||'0').replace(',','.'))||dep.valor,periodo:val('ed_periodo')||dep.periodo,categoria:val('ed_cat')||'',data:val('ed_data')||dep.data};
+  const payload={item:val('ed_item')||dep.item,valor:parseMoeda(val('ed_valor'))||dep.valor,periodo:val('ed_periodo')||dep.periodo,categoria:val('ed_cat')||'',data:val('ed_data')||dep.data};
   const {error}=await sb.from('despesas').update(payload).eq('id',id);
   if(error){ toast('Erro ao atualizar despesa'); return; }
   Object.assign(dep,{item:payload.item,valor:payload.valor,periodo:payload.periodo,categoria:payload.categoria,data:payload.data});
@@ -2322,7 +2354,7 @@ document.addEventListener('keydown', function(e){
 
 // ─── BOOT ─────────────────────────────────────────────────────────────────────
 const sc=document.getElementById('sel-currency'); if(sc) sc.value=(data.currency||'BRL');
-const mi=document.getElementById('meta-input'); if(mi) mi.value=(data.metaMensal||'');
+const mi=document.getElementById('meta-input'); if(mi) mi.value=formatMoedaInput(data.metaMensal);
 // initData() é chamado pelo login (tentarLogin ou verificarSessao)
 </script>
 </body>
